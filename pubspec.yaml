@@ -1,0 +1,75 @@
+name: lifeos
+description: "LifeOS — an offline-first personal operating system."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^3.0.0
+  riverpod_annotation: ^4.0.0
+
+  # Dependency injection
+  get_it: ^8.0.3
+
+  # Routing
+  go_router: ^15.1.2
+
+  # Local database (Drift — scaffolded, no tables yet in Module 1)
+  drift: ^2.23.1
+  sqlite3_flutter_libs: ^0.5.28
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Secure storage & lightweight prefs
+  flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.3.5
+
+  # Serialization
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+  # Animation
+  flutter_animate: ^4.5.2
+  animations: ^2.0.11
+  lottie: ^3.3.1
+
+  # SVG
+  flutter_svg: ^2.0.17
+
+  # Biometrics
+  local_auth: ^2.3.0
+
+  # Date/time formatting
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+  build_runner: ^2.4.14
+  riverpod_generator: ^4.0.0
+  drift_dev: ^2.23.1
+  freezed: ^3.0.0
+  json_serializable: ^6.9.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/svg/home/
+    - assets/lottie/
+    # NOTE: assets/svg/{health,finance,documents,reminders,common,avatars,illustrations}/
+    # and assets/rive/ are scaffolded folders reserved for future modules — Flutter's
+    # asset bundler errors on empty directories, so they're added to this list only once
+    # they hold real files. See docs/future_work.md.
