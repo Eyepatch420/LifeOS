@@ -29,7 +29,9 @@ class BiometricService {
       final available = await _localAuth.getAvailableBiometrics();
       return available.isNotEmpty;
     } catch (error, stackTrace) {
-      debugPrint('BiometricService.canAuthenticate failed: $error\n$stackTrace');
+      debugPrint(
+        'BiometricService.canAuthenticate failed: $error\n$stackTrace',
+      );
       return false;
     }
   }

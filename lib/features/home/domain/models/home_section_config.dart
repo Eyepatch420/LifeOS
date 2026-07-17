@@ -30,7 +30,10 @@ class HomeSectionMeta {
     required this.icon,
     this.supportsCustomization = true,
     this.analyticsName,
-  });
+    this.enabled = true,
+    this.collapsed = false,
+    int? priority,
+  }) : priority = priority ?? order;
 
   /// Stable key — used to look up this section's builder (see
   /// `home_section_registry.dart`) and by any future analytics/deep-link
@@ -60,7 +63,30 @@ class HomeSectionMeta {
   final String displayName;
   final IconData icon;
 
-  HomeSectionMeta copyWith({int? order, bool? visible}) => HomeSectionMeta(
+  /// Coarser kill-switch than [visible]: [visible] is the user's own
+  /// per-session show/hide toggle, [enabled] is reserved for a future
+  /// feature-flag/entitlement gate orthogonal to that preference. Not read
+  /// by any rendering code yet.
+  final bool enabled;
+
+  /// Reserved for a future collapsed/summary render mode, distinct from
+  /// [visible]. Not read by any rendering code yet.
+  final bool collapsed;
+
+  /// Reserved for a future system-suggested ranking, distinct from [order]
+  /// (the user's literal position choice) — a future recommendation
+  /// feature could compute this without overwriting the user's own
+  /// [order]. Defaults to [order] if not supplied. Not read by any
+  /// rendering code yet.
+  final int priority;
+
+  HomeSectionMeta copyWith({
+    int? order,
+    bool? visible,
+    bool? enabled,
+    bool? collapsed,
+    int? priority,
+  }) => HomeSectionMeta(
     id: id,
     order: order ?? this.order,
     visible: visible ?? this.visible,
@@ -68,5 +94,8 @@ class HomeSectionMeta {
     icon: icon,
     supportsCustomization: supportsCustomization,
     analyticsName: analyticsName,
+    enabled: enabled ?? this.enabled,
+    collapsed: collapsed ?? this.collapsed,
+    priority: priority ?? this.priority,
   );
 }

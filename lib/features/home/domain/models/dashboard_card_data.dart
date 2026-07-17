@@ -33,6 +33,7 @@ abstract class QuickAction with _$QuickAction {
 @freezed
 abstract class UpNextItem with _$UpNextItem {
   const factory UpNextItem({
+    required String id,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -55,6 +56,7 @@ abstract class HabitStreak with _$HabitStreak {
 @freezed
 abstract class TimelineStep with _$TimelineStep {
   const factory TimelineStep({
+    required String id,
     required IconData icon,
     required String label,
     required String time,
@@ -62,7 +64,10 @@ abstract class TimelineStep with _$TimelineStep {
   }) = _TimelineStep;
 }
 
-/// One row in "Recent Notes".
+/// One row in "Recent Notes". `id` is nullable — mock-seeded rows (see
+/// `mock_dashboard_data.dart`) have none, since there's no real note behind
+/// them to navigate to; rows sourced from `notesDashboardProvider` always
+/// set it, which is what `RecentNotesCard`'s tap wiring keys off.
 @freezed
 abstract class NoteSummary with _$NoteSummary {
   const factory NoteSummary({
@@ -71,10 +76,12 @@ abstract class NoteSummary with _$NoteSummary {
     required String preview,
     required String timestamp,
     required bool isPinned,
+    String? id,
   }) = _NoteSummary;
 }
 
-/// One row in "My Lists".
+/// One row in "My Lists". `id` is nullable for the same reason as
+/// [NoteSummary.id].
 @freezed
 abstract class ListSummary with _$ListSummary {
   const factory ListSummary({
@@ -82,5 +89,6 @@ abstract class ListSummary with _$ListSummary {
     required String title,
     required String subtitle,
     required double progress,
+    String? id,
   }) = _ListSummary;
 }

@@ -546,7 +546,7 @@ as String,
 /// @nodoc
 mixin _$UpNextItem {
 
- IconData get icon; String get title; String get subtitle; bool get isUrgent;
+ String get id; IconData get icon; String get title; String get subtitle; bool get isUrgent;
 /// Create a copy of UpNextItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -557,16 +557,16 @@ $UpNextItemCopyWith<UpNextItem> get copyWith => _$UpNextItemCopyWithImpl<UpNextI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpNextItem&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpNextItem&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,subtitle,isUrgent);
+int get hashCode => Object.hash(runtimeType,id,icon,title,subtitle,isUrgent);
 
 @override
 String toString() {
-  return 'UpNextItem(icon: $icon, title: $title, subtitle: $subtitle, isUrgent: $isUrgent)';
+  return 'UpNextItem(id: $id, icon: $icon, title: $title, subtitle: $subtitle, isUrgent: $isUrgent)';
 }
 
 
@@ -577,7 +577,7 @@ abstract mixin class $UpNextItemCopyWith<$Res>  {
   factory $UpNextItemCopyWith(UpNextItem value, $Res Function(UpNextItem) _then) = _$UpNextItemCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String title, String subtitle, bool isUrgent
+ String id, IconData icon, String title, String subtitle, bool isUrgent
 });
 
 
@@ -594,9 +594,10 @@ class _$UpNextItemCopyWithImpl<$Res>
 
 /// Create a copy of UpNextItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? isUrgent = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? icon = null,Object? title = null,Object? subtitle = null,Object? isUrgent = null,}) {
   return _then(_self.copyWith(
-icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_nullable_to_non_nullable
@@ -685,10 +686,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  bool isUrgent)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  IconData icon,  String title,  String subtitle,  bool isUrgent)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UpNextItem() when $default != null:
-return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
+return $default(_that.id,_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
   return orElse();
 
 }
@@ -706,10 +707,10 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  bool isUrgent)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  IconData icon,  String title,  String subtitle,  bool isUrgent)  $default,) {final _that = this;
 switch (_that) {
 case _UpNextItem():
-return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
+return $default(_that.id,_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -726,10 +727,10 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  String subtitle,  bool isUrgent)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  IconData icon,  String title,  String subtitle,  bool isUrgent)?  $default,) {final _that = this;
 switch (_that) {
 case _UpNextItem() when $default != null:
-return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
+return $default(_that.id,_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
   return null;
 
 }
@@ -741,9 +742,10 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.isUrgent);case _:
 
 
 class _UpNextItem implements UpNextItem {
-  const _UpNextItem({required this.icon, required this.title, required this.subtitle, required this.isUrgent});
+  const _UpNextItem({required this.id, required this.icon, required this.title, required this.subtitle, required this.isUrgent});
   
 
+@override final  String id;
 @override final  IconData icon;
 @override final  String title;
 @override final  String subtitle;
@@ -759,16 +761,16 @@ _$UpNextItemCopyWith<_UpNextItem> get copyWith => __$UpNextItemCopyWithImpl<_UpN
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpNextItem&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpNextItem&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,subtitle,isUrgent);
+int get hashCode => Object.hash(runtimeType,id,icon,title,subtitle,isUrgent);
 
 @override
 String toString() {
-  return 'UpNextItem(icon: $icon, title: $title, subtitle: $subtitle, isUrgent: $isUrgent)';
+  return 'UpNextItem(id: $id, icon: $icon, title: $title, subtitle: $subtitle, isUrgent: $isUrgent)';
 }
 
 
@@ -779,7 +781,7 @@ abstract mixin class _$UpNextItemCopyWith<$Res> implements $UpNextItemCopyWith<$
   factory _$UpNextItemCopyWith(_UpNextItem value, $Res Function(_UpNextItem) _then) = __$UpNextItemCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String title, String subtitle, bool isUrgent
+ String id, IconData icon, String title, String subtitle, bool isUrgent
 });
 
 
@@ -796,9 +798,10 @@ class __$UpNextItemCopyWithImpl<$Res>
 
 /// Create a copy of UpNextItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? isUrgent = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? icon = null,Object? title = null,Object? subtitle = null,Object? isUrgent = null,}) {
   return _then(_UpNextItem(
-icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_nullable_to_non_nullable
@@ -1084,7 +1087,7 @@ as List<bool>,
 /// @nodoc
 mixin _$TimelineStep {
 
- IconData get icon; String get label; String get time; Color get dotColor;
+ String get id; IconData get icon; String get label; String get time; Color get dotColor;
 /// Create a copy of TimelineStep
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1095,16 +1098,16 @@ $TimelineStepCopyWith<TimelineStep> get copyWith => _$TimelineStepCopyWithImpl<T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimelineStep&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.time, time) || other.time == time)&&(identical(other.dotColor, dotColor) || other.dotColor == dotColor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimelineStep&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.time, time) || other.time == time)&&(identical(other.dotColor, dotColor) || other.dotColor == dotColor));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,label,time,dotColor);
+int get hashCode => Object.hash(runtimeType,id,icon,label,time,dotColor);
 
 @override
 String toString() {
-  return 'TimelineStep(icon: $icon, label: $label, time: $time, dotColor: $dotColor)';
+  return 'TimelineStep(id: $id, icon: $icon, label: $label, time: $time, dotColor: $dotColor)';
 }
 
 
@@ -1115,7 +1118,7 @@ abstract mixin class $TimelineStepCopyWith<$Res>  {
   factory $TimelineStepCopyWith(TimelineStep value, $Res Function(TimelineStep) _then) = _$TimelineStepCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String label, String time, Color dotColor
+ String id, IconData icon, String label, String time, Color dotColor
 });
 
 
@@ -1132,9 +1135,10 @@ class _$TimelineStepCopyWithImpl<$Res>
 
 /// Create a copy of TimelineStep
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? label = null,Object? time = null,Object? dotColor = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? icon = null,Object? label = null,Object? time = null,Object? dotColor = null,}) {
   return _then(_self.copyWith(
-icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as String,dotColor: null == dotColor ? _self.dotColor : dotColor // ignore: cast_nullable_to_non_nullable
@@ -1223,10 +1227,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String label,  String time,  Color dotColor)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  IconData icon,  String label,  String time,  Color dotColor)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimelineStep() when $default != null:
-return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
+return $default(_that.id,_that.icon,_that.label,_that.time,_that.dotColor);case _:
   return orElse();
 
 }
@@ -1244,10 +1248,10 @@ return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String label,  String time,  Color dotColor)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  IconData icon,  String label,  String time,  Color dotColor)  $default,) {final _that = this;
 switch (_that) {
 case _TimelineStep():
-return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
+return $default(_that.id,_that.icon,_that.label,_that.time,_that.dotColor);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1264,10 +1268,10 @@ return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String label,  String time,  Color dotColor)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  IconData icon,  String label,  String time,  Color dotColor)?  $default,) {final _that = this;
 switch (_that) {
 case _TimelineStep() when $default != null:
-return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
+return $default(_that.id,_that.icon,_that.label,_that.time,_that.dotColor);case _:
   return null;
 
 }
@@ -1279,9 +1283,10 @@ return $default(_that.icon,_that.label,_that.time,_that.dotColor);case _:
 
 
 class _TimelineStep implements TimelineStep {
-  const _TimelineStep({required this.icon, required this.label, required this.time, required this.dotColor});
+  const _TimelineStep({required this.id, required this.icon, required this.label, required this.time, required this.dotColor});
   
 
+@override final  String id;
 @override final  IconData icon;
 @override final  String label;
 @override final  String time;
@@ -1297,16 +1302,16 @@ _$TimelineStepCopyWith<_TimelineStep> get copyWith => __$TimelineStepCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimelineStep&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.time, time) || other.time == time)&&(identical(other.dotColor, dotColor) || other.dotColor == dotColor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimelineStep&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.time, time) || other.time == time)&&(identical(other.dotColor, dotColor) || other.dotColor == dotColor));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,label,time,dotColor);
+int get hashCode => Object.hash(runtimeType,id,icon,label,time,dotColor);
 
 @override
 String toString() {
-  return 'TimelineStep(icon: $icon, label: $label, time: $time, dotColor: $dotColor)';
+  return 'TimelineStep(id: $id, icon: $icon, label: $label, time: $time, dotColor: $dotColor)';
 }
 
 
@@ -1317,7 +1322,7 @@ abstract mixin class _$TimelineStepCopyWith<$Res> implements $TimelineStepCopyWi
   factory _$TimelineStepCopyWith(_TimelineStep value, $Res Function(_TimelineStep) _then) = __$TimelineStepCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String label, String time, Color dotColor
+ String id, IconData icon, String label, String time, Color dotColor
 });
 
 
@@ -1334,9 +1339,10 @@ class __$TimelineStepCopyWithImpl<$Res>
 
 /// Create a copy of TimelineStep
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? label = null,Object? time = null,Object? dotColor = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? icon = null,Object? label = null,Object? time = null,Object? dotColor = null,}) {
   return _then(_TimelineStep(
-icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,time: null == time ? _self.time : time // ignore: cast_nullable_to_non_nullable
 as String,dotColor: null == dotColor ? _self.dotColor : dotColor // ignore: cast_nullable_to_non_nullable
@@ -1350,7 +1356,7 @@ as Color,
 /// @nodoc
 mixin _$NoteSummary {
 
- IconData get icon; String get title; String get preview; String get timestamp; bool get isPinned;
+ IconData get icon; String get title; String get preview; String get timestamp; bool get isPinned; String? get id;
 /// Create a copy of NoteSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1361,16 +1367,16 @@ $NoteSummaryCopyWith<NoteSummary> get copyWith => _$NoteSummaryCopyWithImpl<Note
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoteSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoteSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,preview,timestamp,isPinned);
+int get hashCode => Object.hash(runtimeType,icon,title,preview,timestamp,isPinned,id);
 
 @override
 String toString() {
-  return 'NoteSummary(icon: $icon, title: $title, preview: $preview, timestamp: $timestamp, isPinned: $isPinned)';
+  return 'NoteSummary(icon: $icon, title: $title, preview: $preview, timestamp: $timestamp, isPinned: $isPinned, id: $id)';
 }
 
 
@@ -1381,7 +1387,7 @@ abstract mixin class $NoteSummaryCopyWith<$Res>  {
   factory $NoteSummaryCopyWith(NoteSummary value, $Res Function(NoteSummary) _then) = _$NoteSummaryCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String title, String preview, String timestamp, bool isPinned
+ IconData icon, String title, String preview, String timestamp, bool isPinned, String? id
 });
 
 
@@ -1398,14 +1404,15 @@ class _$NoteSummaryCopyWithImpl<$Res>
 
 /// Create a copy of NoteSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? preview = null,Object? timestamp = null,Object? isPinned = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? preview = null,Object? timestamp = null,Object? isPinned = null,Object? id = freezed,}) {
   return _then(_self.copyWith(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,preview: null == preview ? _self.preview : preview // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as String,isPinned: null == isPinned ? _self.isPinned : isPinned // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1490,10 +1497,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned,  String? id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NoteSummary() when $default != null:
-return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned);case _:
+return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned,_that.id);case _:
   return orElse();
 
 }
@@ -1511,10 +1518,10 @@ return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPin
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned,  String? id)  $default,) {final _that = this;
 switch (_that) {
 case _NoteSummary():
-return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned);case _:
+return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned,_that.id);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1531,10 +1538,10 @@ return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPin
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  String preview,  String timestamp,  bool isPinned,  String? id)?  $default,) {final _that = this;
 switch (_that) {
 case _NoteSummary() when $default != null:
-return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned);case _:
+return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPinned,_that.id);case _:
   return null;
 
 }
@@ -1546,7 +1553,7 @@ return $default(_that.icon,_that.title,_that.preview,_that.timestamp,_that.isPin
 
 
 class _NoteSummary implements NoteSummary {
-  const _NoteSummary({required this.icon, required this.title, required this.preview, required this.timestamp, required this.isPinned});
+  const _NoteSummary({required this.icon, required this.title, required this.preview, required this.timestamp, required this.isPinned, this.id});
   
 
 @override final  IconData icon;
@@ -1554,6 +1561,7 @@ class _NoteSummary implements NoteSummary {
 @override final  String preview;
 @override final  String timestamp;
 @override final  bool isPinned;
+@override final  String? id;
 
 /// Create a copy of NoteSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -1565,16 +1573,16 @@ _$NoteSummaryCopyWith<_NoteSummary> get copyWith => __$NoteSummaryCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoteSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NoteSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.isPinned, isPinned) || other.isPinned == isPinned)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,preview,timestamp,isPinned);
+int get hashCode => Object.hash(runtimeType,icon,title,preview,timestamp,isPinned,id);
 
 @override
 String toString() {
-  return 'NoteSummary(icon: $icon, title: $title, preview: $preview, timestamp: $timestamp, isPinned: $isPinned)';
+  return 'NoteSummary(icon: $icon, title: $title, preview: $preview, timestamp: $timestamp, isPinned: $isPinned, id: $id)';
 }
 
 
@@ -1585,7 +1593,7 @@ abstract mixin class _$NoteSummaryCopyWith<$Res> implements $NoteSummaryCopyWith
   factory _$NoteSummaryCopyWith(_NoteSummary value, $Res Function(_NoteSummary) _then) = __$NoteSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String title, String preview, String timestamp, bool isPinned
+ IconData icon, String title, String preview, String timestamp, bool isPinned, String? id
 });
 
 
@@ -1602,14 +1610,15 @@ class __$NoteSummaryCopyWithImpl<$Res>
 
 /// Create a copy of NoteSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? preview = null,Object? timestamp = null,Object? isPinned = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? preview = null,Object? timestamp = null,Object? isPinned = null,Object? id = freezed,}) {
   return _then(_NoteSummary(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,preview: null == preview ? _self.preview : preview // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as String,isPinned: null == isPinned ? _self.isPinned : isPinned // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1619,7 +1628,7 @@ as bool,
 /// @nodoc
 mixin _$ListSummary {
 
- IconData get icon; String get title; String get subtitle; double get progress;
+ IconData get icon; String get title; String get subtitle; double get progress; String? get id;
 /// Create a copy of ListSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1630,16 +1639,16 @@ $ListSummaryCopyWith<ListSummary> get copyWith => _$ListSummaryCopyWithImpl<List
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ListSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ListSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,subtitle,progress);
+int get hashCode => Object.hash(runtimeType,icon,title,subtitle,progress,id);
 
 @override
 String toString() {
-  return 'ListSummary(icon: $icon, title: $title, subtitle: $subtitle, progress: $progress)';
+  return 'ListSummary(icon: $icon, title: $title, subtitle: $subtitle, progress: $progress, id: $id)';
 }
 
 
@@ -1650,7 +1659,7 @@ abstract mixin class $ListSummaryCopyWith<$Res>  {
   factory $ListSummaryCopyWith(ListSummary value, $Res Function(ListSummary) _then) = _$ListSummaryCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String title, String subtitle, double progress
+ IconData icon, String title, String subtitle, double progress, String? id
 });
 
 
@@ -1667,13 +1676,14 @@ class _$ListSummaryCopyWithImpl<$Res>
 
 /// Create a copy of ListSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? progress = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? progress = null,Object? id = freezed,}) {
   return _then(_self.copyWith(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
-as double,
+as double,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1758,10 +1768,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  double progress)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  double progress,  String? id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ListSummary() when $default != null:
-return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.title,_that.subtitle,_that.progress,_that.id);case _:
   return orElse();
 
 }
@@ -1779,10 +1789,10 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  double progress)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  String subtitle,  double progress,  String? id)  $default,) {final _that = this;
 switch (_that) {
 case _ListSummary():
-return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.title,_that.subtitle,_that.progress,_that.id);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1799,10 +1809,10 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  String subtitle,  double progress)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  String subtitle,  double progress,  String? id)?  $default,) {final _that = this;
 switch (_that) {
 case _ListSummary() when $default != null:
-return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.title,_that.subtitle,_that.progress,_that.id);case _:
   return null;
 
 }
@@ -1814,13 +1824,14 @@ return $default(_that.icon,_that.title,_that.subtitle,_that.progress);case _:
 
 
 class _ListSummary implements ListSummary {
-  const _ListSummary({required this.icon, required this.title, required this.subtitle, required this.progress});
+  const _ListSummary({required this.icon, required this.title, required this.subtitle, required this.progress, this.id});
   
 
 @override final  IconData icon;
 @override final  String title;
 @override final  String subtitle;
 @override final  double progress;
+@override final  String? id;
 
 /// Create a copy of ListSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -1832,16 +1843,16 @@ _$ListSummaryCopyWith<_ListSummary> get copyWith => __$ListSummaryCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ListSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ListSummary&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,subtitle,progress);
+int get hashCode => Object.hash(runtimeType,icon,title,subtitle,progress,id);
 
 @override
 String toString() {
-  return 'ListSummary(icon: $icon, title: $title, subtitle: $subtitle, progress: $progress)';
+  return 'ListSummary(icon: $icon, title: $title, subtitle: $subtitle, progress: $progress, id: $id)';
 }
 
 
@@ -1852,7 +1863,7 @@ abstract mixin class _$ListSummaryCopyWith<$Res> implements $ListSummaryCopyWith
   factory _$ListSummaryCopyWith(_ListSummary value, $Res Function(_ListSummary) _then) = __$ListSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String title, String subtitle, double progress
+ IconData icon, String title, String subtitle, double progress, String? id
 });
 
 
@@ -1869,13 +1880,14 @@ class __$ListSummaryCopyWithImpl<$Res>
 
 /// Create a copy of ListSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? progress = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? subtitle = null,Object? progress = null,Object? id = freezed,}) {
   return _then(_ListSummary(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
-as double,
+as double,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -10,9 +10,21 @@ import 'package:lifeos/shared/widgets/cards/section_header.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 
 class TimelineStepperCard extends StatelessWidget {
-  const TimelineStepperCard({required this.steps, super.key});
+  const TimelineStepperCard({
+    required this.steps,
+    required this.onDismiss,
+    required this.onStepTap,
+    super.key,
+  });
 
   final List<TimelineStep> steps;
+
+  /// Called with the dismissed step's [TimelineStep.id] after a long-press.
+  final void Function(String id) onDismiss;
+
+  /// Called with the tapped step's [TimelineStep.id] — navigates to its
+  /// detail screen. Distinct gesture from [onDismiss] (tap vs. long-press).
+  final void Function(String id) onStepTap;
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +52,11 @@ class TimelineStepperCard extends StatelessWidget {
                           perItemDelay: const Duration(milliseconds: 80),
                         ),
                         duration: AppMotionPresets.timeline.duration,
-                        child: _TimelineStepWidget(
+                        child: _DismissibleTimelineStep(
                           step: steps[i],
                           isLast: i == steps.length - 1,
+                          onDismiss: () => onDismiss(steps[i].id),
+                          onTap: () => onStepTap(steps[i].id),
                         ),
                       ),
                     ),
@@ -50,6 +64,49 @@ class TimelineStepperCard extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Wraps [_TimelineStepWidget] with tap-to-view-detail and
+/// long-press-to-dismiss (fade-out via [AppMotionPresets.cardExit] —
+/// `Dismissible`'s swipe metaphor doesn't fit a horizontal stepper as
+/// naturally as it does the vertical `UpNextCard` list).
+class _DismissibleTimelineStep extends StatefulWidget {
+  const _DismissibleTimelineStep({
+    required this.step,
+    required this.isLast,
+    required this.onDismiss,
+    required this.onTap,
+  });
+
+  final TimelineStep step;
+  final bool isLast;
+  final VoidCallback onDismiss;
+  final VoidCallback onTap;
+
+  @override
+  State<_DismissibleTimelineStep> createState() =>
+      _DismissibleTimelineStepState();
+}
+
+class _DismissibleTimelineStepState extends State<_DismissibleTimelineStep> {
+  bool _dismissing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onLongPress: () => setState(() => _dismissing = true),
+      child: AnimatedOpacity(
+        opacity: _dismissing ? 0 : 1,
+        duration: AppMotionPresets.cardExit.duration,
+        curve: AppMotionPresets.cardExit.curve,
+        onEnd: () {
+          if (_dismissing) widget.onDismiss();
+        },
+        child: _TimelineStepWidget(step: widget.step, isLast: widget.isLast),
       ),
     );
   }

@@ -8,9 +8,19 @@ import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/indicators/animated_streak_ring.dart';
 
 class MyListsCard extends StatelessWidget {
-  const MyListsCard({required this.lists, super.key});
+  const MyListsCard({
+    required this.lists,
+    super.key,
+    this.onListTap,
+    this.onViewAll,
+  });
 
   final List<ListSummary> lists;
+
+  /// Called with the tapped list's `id` — omitted (no gesture wiring) for
+  /// mock-seeded rows that have no `id` (see [ListSummary.id]).
+  final void Function(String id)? onListTap;
+  final VoidCallback? onViewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +28,7 @@ class MyListsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: 'My Lists'),
+          SectionHeader(title: 'My Lists', onViewAll: onViewAll),
           const SizedBox(height: AppSpacing.sm),
           if (lists.isEmpty)
             const EmptyState(
@@ -26,7 +36,7 @@ class MyListsCard extends StatelessWidget {
               message: 'No lists yet',
             )
           else
-            for (final list in lists) _ListTile(list: list),
+            for (final list in lists) _ListTile(list: list, onTap: onListTap),
         ],
       ),
     );
@@ -34,52 +44,58 @@ class MyListsCard extends StatelessWidget {
 }
 
 class _ListTile extends StatelessWidget {
-  const _ListTile({required this.list});
+  const _ListTile({required this.list, this.onTap});
 
   final ListSummary list;
+  final void Function(String id)? onTap;
 
   @override
   Widget build(BuildContext context) {
     final accent = context.colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: AppSpacing.tileIconBoxSize,
-            height: AppSpacing.tileIconBoxSize,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+    final id = list.id;
+    return InkWell(
+      onTap: id == null || onTap == null ? null : () => onTap!(id),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          children: [
+            Container(
+              width: AppSpacing.tileIconBoxSize,
+              height: AppSpacing.tileIconBoxSize,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Icon(list.icon, size: 18, color: accent),
             ),
-            child: Icon(list.icon, size: 18, color: accent),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  list.title,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    list.title,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Text(
-                  list.subtitle,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
+                  Text(
+                    list.subtitle,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          AnimatedStreakRing(
-            progress: list.progress,
-            label: '${(list.progress * 100).round()}%',
-            color: accent,
-          ),
-        ],
+            AnimatedStreakRing(
+              progress: list.progress,
+              label: '${(list.progress * 100).round()}%',
+              color: accent,
+            ),
+          ],
+        ),
       ),
     );
   }

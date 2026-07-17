@@ -1,20 +1,42 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/animations/page_transitions.dart';
 import 'package:lifeos/features/documents/presentation/screens/documents_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/finance_placeholder_screen.dart';
+import 'package:lifeos/features/finance/presentation/screens/new_expense_screen.dart';
 import 'package:lifeos/features/health/presentation/screens/health_placeholder_screen.dart';
+import 'package:lifeos/features/health/presentation/screens/new_habit_screen.dart';
 import 'package:lifeos/features/home/presentation/screens/home_screen.dart';
+import 'package:lifeos/features/home/presentation/screens/timeline_detail_screen.dart';
+import 'package:lifeos/features/lists/presentation/screens/list_detail_screen.dart';
+import 'package:lifeos/features/lists/presentation/screens/lists_screen.dart';
 import 'package:lifeos/features/navigation/presentation/shell/app_shell.dart';
+import 'package:lifeos/features/notes/presentation/screens/new_note_screen.dart';
+import 'package:lifeos/features/notes/presentation/screens/note_detail_screen.dart';
+import 'package:lifeos/features/notes/presentation/screens/note_edit_screen.dart';
+import 'package:lifeos/features/notes/presentation/screens/notes_list_screen.dart';
+import 'package:lifeos/features/notifications/presentation/screens/notifications_placeholder_screen.dart';
 import 'package:lifeos/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:lifeos/features/reminders/presentation/screens/reminders_placeholder_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/new_reminder_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/reminder_detail_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/reminders_list_screen.dart';
+import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
 import 'package:lifeos/features/splash/presentation/screens/splash_screen.dart';
 import 'package:lifeos/features/user_setup/presentation/providers/user_profile_providers.dart';
+import 'package:lifeos/features/user_setup/presentation/screens/profile_placeholder_screen.dart';
 import 'package:lifeos/features/user_setup/presentation/screens/user_setup_screen.dart';
+
+/// Root navigator, distinct from each `StatefulShellBranch`'s own nested
+/// navigator. Routes carrying `parentNavigatorKey: _rootNavigatorKey` push
+/// onto this one instead, which escapes `AppShell`'s persistent
+/// `FloatingBottomNav` chrome — see docs/architecture.md's Routing section.
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: RoutePaths.splash,
     redirect: (context, state) {
       final onboardingComplete = ref.read(onboardingCompleteProvider);
@@ -79,6 +101,144 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   key: state.pageKey,
                   child: const HomeScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: RoutePaths.newNote,
+                    name: RouteNames.newNote,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewNoteScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newReminder,
+                    name: RouteNames.newReminder,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewReminderScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newExpense,
+                    name: RouteNames.newExpense,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewExpenseScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newHabit,
+                    name: RouteNames.newHabit,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewHabitScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.search,
+                    name: RouteNames.search,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const SearchScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.notifications,
+                    name: RouteNames.notifications,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NotificationsPlaceholderScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.profile,
+                    name: RouteNames.profile,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const ProfilePlaceholderScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.timelineDetail,
+                    name: RouteNames.timelineDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: TimelineDetailScreen(
+                        stepId: state.pathParameters['stepId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.notes,
+                    name: RouteNames.notes,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NotesListScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.noteEdit,
+                    name: RouteNames.noteEdit,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: NoteEditScreen(
+                        noteId: state.pathParameters['noteId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.noteDetail,
+                    name: RouteNames.noteDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: NoteDetailScreen(
+                        noteId: state.pathParameters['noteId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.lists,
+                    name: RouteNames.lists,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const ListsScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.listDetail,
+                    name: RouteNames.listDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: ListDetailScreen(
+                        listId: state.pathParameters['listId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.reminderDetail,
+                    name: RouteNames.reminderDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: ReminderDetailScreen(
+                        reminderId: state.pathParameters['reminderId']!,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -87,7 +247,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: RoutePaths.reminders,
                 name: RouteNames.reminders,
-                builder: (context, state) => const RemindersPlaceholderScreen(),
+                builder: (context, state) => const RemindersListScreen(),
               ),
             ],
           ),

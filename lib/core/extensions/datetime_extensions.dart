@@ -20,3 +20,16 @@ extension TimeOfDayBucketGreeting on TimeOfDayBucket {
     TimeOfDayBucket.night => 'Good night',
   };
 }
+
+extension LocalDateKey on DateTime {
+  /// This date's `yyyy-MM-dd` key in local time — the canonical day
+  /// boundary used everywhere a feature needs "today" as an id (habit
+  /// completions, mood entries, per-day dismissals), so every feature
+  /// agrees on where midnight falls instead of mixing local/UTC cutoffs.
+  String get localDateKey {
+    final y = year.toString().padLeft(4, '0');
+    final m = month.toString().padLeft(2, '0');
+    final d = day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+}

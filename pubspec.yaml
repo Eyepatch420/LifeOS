@@ -51,6 +51,21 @@ dependencies:
   # Date/time formatting
   intl: ^0.19.0
 
+  # Notes markdown rendering (official flutter_markdown is discontinued;
+  # this is the maintained community fork)
+  flutter_markdown_plus: ^1.0.12
+
+  # Notes sharing (Phase 2B). Pinned below 13.1.0 — newer share_plus
+  # requires win32 ^6.0.1, which conflicts with flutter_secure_storage
+  # 9.2.4's win32 ^5.0.0 constraint. Revisit once flutter_secure_storage
+  # bumps its win32 floor.
+  share_plus: ^12.0.2
+
+  # Real Android-first notification scheduling for Reminders (core/services/
+  # NotificationScheduler's LocalNotificationScheduler implementation).
+  flutter_local_notifications: ^19.4.2
+  timezone: ^0.10.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -62,6 +77,10 @@ dev_dependencies:
   drift_dev: ^2.23.1
   freezed: ^3.0.0
   json_serializable: ^6.9.0
+
+  # Only for the schema-migration test, which seeds a raw v1 database
+  # ahead of AppDatabase's own onUpgrade path.
+  sqlite3: ^2.9.0
 
 flutter:
   uses-material-design: true

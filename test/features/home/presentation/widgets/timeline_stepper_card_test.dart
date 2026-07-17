@@ -9,12 +9,14 @@ void main() {
 
   const steps = [
     TimelineStep(
+      id: 'step-1',
       icon: Icons.medication_outlined,
       label: 'Medicine',
       time: '2:00 PM',
       dotColor: Color(0xFF2F6FED),
     ),
     TimelineStep(
+      id: 'step-2',
       icon: Icons.lunch_dining_outlined,
       label: 'Lunch',
       time: '12:30 PM',
@@ -22,10 +24,20 @@ void main() {
     ),
   ];
 
+  Widget buildCard({
+    List<TimelineStep> steps = steps,
+    void Function(String id)? onDismiss,
+    void Function(String id)? onStepTap,
+  }) => TimelineStepperCard(
+    steps: steps,
+    onDismiss: onDismiss ?? (_) {},
+    onStepTap: onStepTap ?? (_) {},
+  );
+
   testWidgets(
     'renders EmptyState with header still shown when steps is empty',
     (tester) async {
-      await tester.pumpWidget(wrap(const TimelineStepperCard(steps: [])));
+      await tester.pumpWidget(wrap(buildCard(steps: const [])));
 
       expect(find.text("Today's Timeline"), findsOneWidget);
       expect(find.byType(EmptyState), findsOneWidget);
@@ -35,7 +47,7 @@ void main() {
   testWidgets('renders one step widget per step when populated', (
     tester,
   ) async {
-    await tester.pumpWidget(wrap(const TimelineStepperCard(steps: steps)));
+    await tester.pumpWidget(wrap(buildCard()));
     await tester.pump();
 
     expect(find.text('Medicine'), findsOneWidget);
@@ -45,7 +57,7 @@ void main() {
   testWidgets(
     'regression: stagger is applied per-step, not to the row as one unit',
     (tester) async {
-      await tester.pumpWidget(wrap(const TimelineStepperCard(steps: steps)));
+      await tester.pumpWidget(wrap(buildCard()));
 
       // Immediately after the first frame, step 0 (no delay) should already
       // be further along its fade-in than step 1 (delayed by
@@ -61,6 +73,33 @@ void main() {
 
       expect(opacities.length, greaterThanOrEqualTo(2));
       expect(opacities[0], isNot(equals(opacities[1])));
+    },
+  );
+
+  testWidgets('tapping a step invokes onStepTap with its id', (tester) async {
+    String? tappedId;
+    await tester.pumpWidget(wrap(buildCard(onStepTap: (id) => tappedId = id)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Medicine'));
+    await tester.pump();
+
+    expect(tappedId, 'step-1');
+  });
+
+  testWidgets(
+    'long-pressing a step fades it out then invokes onDismiss with its id',
+    (tester) async {
+      String? dismissedId;
+      await tester.pumpWidget(
+        wrap(buildCard(onDismiss: (id) => dismissedId = id)),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('Medicine'));
+      await tester.pumpAndSettle();
+
+      expect(dismissedId, 'step-1');
     },
   );
 }

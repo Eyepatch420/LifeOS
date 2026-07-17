@@ -24,7 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// against — but the raw `LocalAuthentication()` constructor itself still
 /// needs a real platform to back it, so tests fake the whole service).
 class _FakeBiometricService implements BiometricService {
-  const _FakeBiometricService({this.canAuthenticateResult = false});
+  const _FakeBiometricService() : canAuthenticateResult = false;
 
   final bool canAuthenticateResult;
 
@@ -235,7 +235,9 @@ void main() {
       await tester.ensureVisible(find.byType(PrimaryButton));
       await tester.pump();
 
-      final buttonBeforeTap = tester.widget<PrimaryButton>(find.byType(PrimaryButton));
+      final buttonBeforeTap = tester.widget<PrimaryButton>(
+        find.byType(PrimaryButton),
+      );
       expect(
         buttonBeforeTap.onPressed,
         isNotNull,
@@ -250,7 +252,10 @@ void main() {
       }
 
       expect(tester.takeException(), isNull);
-      expect(router.routerDelegate.currentConfiguration.uri.path, RoutePaths.home);
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        RoutePaths.home,
+      );
     },
   );
 
@@ -269,7 +274,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(tester.takeException(), isNull);
-      expect(router.routerDelegate.currentConfiguration.uri.path, RoutePaths.home);
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        RoutePaths.home,
+      );
     },
   );
 }

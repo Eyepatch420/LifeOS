@@ -1,8 +1,11 @@
+import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/config/di/core_providers.dart';
+import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/features/home/domain/models/home_section_config.dart';
 import 'package:lifeos/features/home/presentation/providers/home_providers.dart';
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
@@ -51,6 +54,17 @@ void main() {
   }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
+    // recentNotesProvider/myListsProvider now thin-watch real feature
+    // dashboard providers backed by AppDatabase — override with an
+    // in-memory test database instead of touching getIt (never
+    // initialized in this test process).
+    final db = AppDatabase.forTesting(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
+    addTearDown(db.close);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -61,6 +75,7 @@ void main() {
           secureStorageServiceProvider.overrideWithValue(
             SecureStorageService(const _FakeSecureStorage({})),
           ),
+          databaseProvider.overrideWithValue(db),
           if (sectionsOverride != null)
             homeSectionsProvider.overrideWith(sectionsOverride),
         ],

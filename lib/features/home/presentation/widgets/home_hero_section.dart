@@ -3,6 +3,7 @@ import 'package:lifeos/core/animations/presets.dart';
 import 'package:lifeos/core/animations/shared_motion.dart';
 import 'package:lifeos/core/constants/app_spacing.dart';
 import 'package:lifeos/features/home/presentation/widgets/motivational_banner.dart';
+import 'package:lifeos/features/search/domain/search_hero_tags.dart';
 import 'package:lifeos/shared/widgets/layouts/hero_scaffold.dart';
 import 'package:lifeos/shared/widgets/media/gradient_hero_background.dart';
 import 'package:lifeos/theme/time_of_day_theme.dart';
@@ -86,10 +87,13 @@ class HomeHeroSection extends StatelessWidget {
                               ],
                             ),
                           ),
-                          _HeroIconButton(
-                            icon: Icons.search,
-                            semanticsLabel: 'Search',
-                            onTap: onSearchTap,
+                          Hero(
+                            tag: searchMorphHeroTag,
+                            child: _HeroIconButton(
+                              icon: Icons.search,
+                              semanticsLabel: 'Search',
+                              onTap: onSearchTap,
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           _HeroIconButton(

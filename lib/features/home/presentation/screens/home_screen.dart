@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/animations/shared_motion.dart';
 import 'package:lifeos/core/constants/app_spacing.dart';
 import 'package:lifeos/features/home/presentation/providers/home_providers.dart';
@@ -11,10 +13,10 @@ import 'package:lifeos/shared/widgets/layouts/floating_page_layout.dart';
 import 'package:lifeos/shared/widgets/layouts/hero_scaffold.dart';
 import 'package:lifeos/theme/time_of_day_theme.dart';
 
-/// Renders the Home Workspace by mapping over `homeSectionsProvider`
-/// (order + visibility) and looking up each visible id's live builder from
-/// the registry — reordering/hiding a section later is a provider write,
-/// never a change to this screen (see docs/architecture.md).
+/// Renders the Home Workspace by rendering `dashboardSections(ref)` (order +
+/// visibility + builder, already joined) — reordering/hiding a section
+/// later is a provider write, never a change to this screen (see
+/// docs/architecture.md and docs/architecture_principles.md).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -25,9 +27,7 @@ class HomeScreen extends ConsumerWidget {
     final profile = ref.watch(userProfileNotifierProvider).value;
     final motivationalMessage = ref.watch(motivationalMessageProvider);
 
-    final sections = [...ref.watch(homeSectionsProvider)]
-      ..sort((a, b) => a.order.compareTo(b.order));
-    final builders = buildHomeSectionBuilders(ref);
+    final sections = dashboardSections(ref);
 
     return FloatingPageLayout(
       body: HeroScaffold(
@@ -37,6 +37,9 @@ class HomeScreen extends ConsumerWidget {
           userName: profile?.name ?? '',
           tint: tint,
           motivationalMessage: motivationalMessage,
+          onSearchTap: () => context.pushNamed(RouteNames.search),
+          onNotificationsTap: () => context.pushNamed(RouteNames.notifications),
+          onAvatarTap: () => context.pushNamed(RouteNames.profile),
         ),
         content: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -47,10 +50,10 @@ class HomeScreen extends ConsumerWidget {
           ),
           child: StaggeredEntrance(
             children: [
-              for (final section in sections.where((s) => s.visible))
+              for (final section in sections.where((s) => s.meta.visible))
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-                  child: builders[section.id]!(context),
+                  child: section.builder(context),
                 ),
             ],
           ),

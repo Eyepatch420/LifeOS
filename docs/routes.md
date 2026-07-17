@@ -30,3 +30,17 @@ Top-level routes use `CustomTransitionPage` wrapping `FadeThroughTransition` (se
 ## Future module placeholders
 
 `/reminders`, `/health`, `/finance`, `/documents` currently render a shared `PlaceholderScaffold(title, workspaceId)`. Each will be replaced by real feature routes in later modules — the route paths and shell structure are expected to remain stable.
+
+## Home push routes (Module 4 Phase 2)
+
+Nested under `/home`, all `parentNavigatorKey: _rootNavigatorKey` (root-navigator pushes, hides `FloatingBottomNav`), all built on `PushedScreenLayout`:
+
+```
+/home/notes                  NotesListScreen
+/home/notes/:noteId          NoteDetailScreen
+/home/notes/:noteId/edit     NoteEditScreen
+/home/lists                  ListsScreen
+/home/lists/:listId          ListDetailScreen
+```
+
+Route order in `app_router.dart` declares `noteEdit` before `noteDetail` — go_router disambiguates by segment count (`notes/:id/edit` has 3 segments vs. `notes/:id`'s 2), so this isn't order-sensitive, but kept in that order for readability.

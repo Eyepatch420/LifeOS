@@ -87,32 +87,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'regression: a long motivational message does not overflow the '
-    'fixed-height hero (was: unbounded Text with no maxLines/ellipsis '
-    'wrapping to 2 lines inside a Positioned with a hard height)',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HeroScaffold(
-              hero: const HomeHeroSection(
-                greeting: 'Good afternoon',
-                dateLabel: 'Wednesday, 15 July 2026',
-                userName: 'dasdas',
-                tint: tint,
-                motivationalMessage:
-                    'Small progress today, big change tomorrow. Keep '
-                    'showing up for yourself every single day this week.',
-              ),
-              content: const SizedBox(height: 400),
+  testWidgets('regression: a long motivational message does not overflow the '
+      'fixed-height hero (was: unbounded Text with no maxLines/ellipsis '
+      'wrapping to 2 lines inside a Positioned with a hard height)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HeroScaffold(
+            hero: const HomeHeroSection(
+              greeting: 'Good afternoon',
+              dateLabel: 'Wednesday, 15 July 2026',
+              userName: 'dasdas',
+              tint: tint,
+              motivationalMessage:
+                  'Small progress today, big change tomorrow. Keep '
+                  'showing up for yourself every single day this week.',
             ),
+            content: const SizedBox(height: 400),
           ),
         ),
-      );
-      await tester.pump();
+      ),
+    );
+    await tester.pump();
 
-      expect(tester.takeException(), isNull);
-    },
-  );
+    expect(tester.takeException(), isNull);
+  });
 }
