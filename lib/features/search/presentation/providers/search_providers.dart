@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/config/router/route_paths.dart';
+import 'package:lifeos/features/navigation/presentation/providers/bottom_nav_providers.dart';
 import 'package:lifeos/features/search/domain/models/searchable_entity.dart';
 import 'package:lifeos/features/search/presentation/providers/search_registry_provider.dart';
 
@@ -24,6 +25,22 @@ final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
 /// replaced wholesale.
 final _placeholderEntitiesProvider = Provider<List<SearchableEntity>>((ref) {
   return const [
+    SearchableEntity(
+      id: 'tab-home',
+      title: 'Home',
+      subtitle: 'Open Home workspace',
+      icon: Icons.home_outlined,
+      category: SearchableEntityCategory.home,
+      routeName: RouteNames.home,
+    ),
+    SearchableEntity(
+      id: 'tab-reminders',
+      title: 'Reminders',
+      subtitle: 'Open Reminders workspace',
+      icon: Icons.notifications_outlined,
+      category: SearchableEntityCategory.remindersTab,
+      routeName: RouteNames.reminders,
+    ),
     SearchableEntity(
       id: 'tab-health',
       title: 'Health',
@@ -59,6 +76,23 @@ final _placeholderEntitiesProvider = Provider<List<SearchableEntity>>((ref) {
   ];
 });
 
+/// Which [SearchableEntityCategory] represents the workspace tab currently
+/// active, keyed by [bottomNavIndexProvider]'s branch order (Home, Reminders,
+/// Health, Finance, Documents) — see `app_router.dart`'s
+/// `StatefulShellRoute.indexedStack` branches. Used to hide the current
+/// tab's own tile from Search: no point surfacing "go to Home" while
+/// already on Home.
+final _currentTabCategoryProvider = Provider<SearchableEntityCategory>((ref) {
+  return switch (ref.watch(bottomNavIndexProvider)) {
+    0 => SearchableEntityCategory.home,
+    1 => SearchableEntityCategory.remindersTab,
+    2 => SearchableEntityCategory.health,
+    3 => SearchableEntityCategory.finance,
+    4 => SearchableEntityCategory.documents,
+    _ => SearchableEntityCategory.home,
+  };
+});
+
 /// The full, unfiltered search index — every registered
 /// [SearchContributor]'s live entities (Notes/Lists as of Phase 2B/2C,
 /// Reminders as of Module 4 Phase 3) plus the remaining tab placeholders
@@ -68,7 +102,11 @@ final _placeholderEntitiesProvider = Provider<List<SearchableEntity>>((ref) {
 final searchableEntitiesProvider = Provider<List<SearchableEntity>>((ref) {
   final registered = ref.watch(registeredSearchEntitiesProvider).value;
   final placeholders = ref.watch(_placeholderEntitiesProvider);
-  return [...?registered, ...placeholders];
+  final currentTab = ref.watch(_currentTabCategoryProvider);
+  return [
+    ...?registered,
+    ...placeholders.where((e) => e.category != currentTab),
+  ];
 });
 
 /// [searchableEntitiesProvider] filtered by [searchQueryProvider] (a

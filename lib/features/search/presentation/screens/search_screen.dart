@@ -19,6 +19,8 @@ class SearchScreen extends ConsumerWidget {
 
   void _onResultTap(BuildContext context, WidgetRef ref, SearchableEntity e) {
     switch (e.category) {
+      case SearchableEntityCategory.home:
+      case SearchableEntityCategory.remindersTab:
       case SearchableEntityCategory.health:
       case SearchableEntityCategory.finance:
       case SearchableEntityCategory.documents:

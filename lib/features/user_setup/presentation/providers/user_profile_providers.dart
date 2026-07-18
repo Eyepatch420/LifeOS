@@ -78,6 +78,20 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     state = AsyncData(profile);
     ref.invalidate(onboardingCompleteProvider);
   }
+
+  /// Post-onboarding theme change (from the profile/settings screen):
+  /// updates the live app-wide theme immediately and persists it onto the
+  /// stored profile so it survives restarts.
+  Future<void> updateThemeMode(ThemeMode mode) async {
+    await ref.read(themeModeProvider.notifier).setThemeMode(mode);
+
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(themeMode: mode);
+    await ref.read(userProfileRepositoryProvider).saveProfile(updated);
+    state = AsyncData(updated);
+  }
 }
 
 final userProfileNotifierProvider =

@@ -23,11 +23,14 @@ class TimeOfDayTint {
   final TimeOfDayBucket bucket;
 }
 
+// Opaque enough (min ~75% alpha) to fully subdue the light-cyan sky SVG
+// beneath, since it never darkens on its own — white hero text/icons need
+// this floor of contrast at every bucket, not just night.
 const Map<TimeOfDayBucket, List<Color>> _tintGradients = {
-  TimeOfDayBucket.morning: [Color(0x992F6FED), Color(0x664FA8F0)],
-  TimeOfDayBucket.afternoon: [Color(0x994FA8F0), Color(0x6683C9F5)],
-  TimeOfDayBucket.evening: [Color(0x997A5CC9), Color(0x664F3B8F)],
-  TimeOfDayBucket.night: [Color(0x99101B3D), Color(0x66223061)],
+  TimeOfDayBucket.morning: [Color(0xCC2F6FED), Color(0xB2355FA6)],
+  TimeOfDayBucket.afternoon: [Color(0xCC2E6FBF), Color(0xB23A6E96)],
+  TimeOfDayBucket.evening: [Color(0xD9563E9E), Color(0xCC2E1E5E)],
+  TimeOfDayBucket.night: [Color(0xF0101B3D), Color(0xE0141C33)],
 };
 
 TimeOfDayTint timeOfDayTintFor(DateTime now) {

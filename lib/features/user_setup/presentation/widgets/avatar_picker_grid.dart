@@ -25,6 +25,11 @@ const Map<String, IconData> _avatarIcons = {
   'rabbit': Icons.cruelty_free,
 };
 
+/// Looks up the icon for a stored `avatarAssetPath` id, falling back to a
+/// generic person icon for an unset/unrecognized id.
+IconData avatarIconFor(String? avatarId) =>
+    _avatarIcons[avatarId] ?? Icons.person;
+
 /// Grid of selectable local avatar options with an animated selection ring.
 class AvatarPickerGrid extends StatelessWidget {
   const AvatarPickerGrid({

@@ -114,7 +114,9 @@ class _HeroScaffoldState extends State<HeroScaffold> {
                         minHeight: constraints.maxHeight,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(widget.sheetRadius),
                         ),

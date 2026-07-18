@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/router/route_paths.dart';
+import 'package:lifeos/features/navigation/presentation/providers/bottom_nav_providers.dart';
 import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
 
 void main() {
@@ -23,6 +24,12 @@ void main() {
           path: '/health',
           name: RouteNames.health,
           builder: (context, state) => const Scaffold(body: Text('Health')),
+        ),
+        GoRoute(
+          path: '/reminders',
+          name: RouteNames.reminders,
+          builder: (context, state) =>
+              const Scaffold(body: Text('Reminders tab')),
         ),
         GoRoute(
           path: '/search',
@@ -72,5 +79,35 @@ void main() {
 
     expect(find.text('Health'), findsOneWidget);
     expect(find.byType(SearchScreen), findsNothing);
+  });
+
+  testWidgets(
+    'hides the current tab (Home, the default) from the index but shows '
+    'the others',
+    (tester) async {
+      await pump(tester);
+
+      expect(find.text('Home'), findsNothing);
+      expect(find.text('Reminders'), findsOneWidget);
+      expect(find.text('Health'), findsOneWidget);
+    },
+  );
+
+  testWidgets('hides Reminders instead when that tab is active', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    // bottomNavIndexProvider defaults to 0 on build; drive it to the
+    // Reminders branch (index 1) the same way the bottom nav would.
+    final element = tester.element(find.byType(SearchScreen));
+    ProviderScope.containerOf(
+      element,
+    ).read(bottomNavIndexProvider.notifier).setIndex(1);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reminders'), findsNothing);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Health'), findsOneWidget);
   });
 }
