@@ -6,8 +6,10 @@ import 'package:lifeos/core/animations/page_transitions.dart';
 import 'package:lifeos/features/documents/presentation/screens/documents_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/finance_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/new_expense_screen.dart';
+import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.dart';
+import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
+import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
 import 'package:lifeos/features/health/presentation/screens/health_placeholder_screen.dart';
-import 'package:lifeos/features/health/presentation/screens/new_habit_screen.dart';
 import 'package:lifeos/features/home/presentation/screens/home_screen.dart';
 import 'package:lifeos/features/home/presentation/screens/timeline_detail_screen.dart';
 import 'package:lifeos/features/lists/presentation/screens/list_detail_screen.dart';
@@ -20,7 +22,9 @@ import 'package:lifeos/features/notes/presentation/screens/notes_list_screen.dar
 import 'package:lifeos/features/notifications/presentation/screens/notifications_placeholder_screen.dart';
 import 'package:lifeos/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/new_reminder_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/planner_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminder_detail_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_list_screen.dart';
 import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
 import 'package:lifeos/features/splash/presentation/screens/splash_screen.dart';
@@ -112,30 +116,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   GoRoute(
-                    path: RoutePaths.newReminder,
-                    name: RouteNames.newReminder,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => buildFadeThroughPage(
-                      key: state.pageKey,
-                      child: const NewReminderScreen(),
-                    ),
-                  ),
-                  GoRoute(
                     path: RoutePaths.newExpense,
                     name: RouteNames.newExpense,
                     parentNavigatorKey: _rootNavigatorKey,
                     pageBuilder: (context, state) => buildFadeThroughPage(
                       key: state.pageKey,
                       child: const NewExpenseScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: RoutePaths.newHabit,
-                    name: RouteNames.newHabit,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => buildFadeThroughPage(
-                      key: state.pageKey,
-                      child: const NewHabitScreen(),
                     ),
                   ),
                   GoRoute(
@@ -227,6 +213,82 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RoutePaths.reminders,
+                name: RouteNames.reminders,
+                builder: (context, state) => const RemindersDashboardScreen(),
+                routes: [
+                  // Static children declared before the dynamic
+                  // `:reminderId` child below — go_router tries routes in
+                  // declaration order, so `/reminders/all` and
+                  // `/reminders/new` match these first instead of being
+                  // captured as a `:reminderId` value of "all"/"new".
+                  GoRoute(
+                    path: RoutePaths.remindersAll,
+                    name: RouteNames.remindersAll,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const RemindersListScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newReminder,
+                    name: RouteNames.newReminder,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: NewReminderScreen(
+                        initialDate: state.extra is DateTime
+                            ? state.extra! as DateTime
+                            : null,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.planner,
+                    name: RouteNames.planner,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const PlannerScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.habits,
+                    name: RouteNames.habits,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const HabitsDashboardScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newHabit,
+                    name: RouteNames.newHabit,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewHabitScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.habitDetail,
+                    name: RouteNames.habitDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: HabitDetailScreen(
+                        habitId: state.pathParameters['habitId']!,
+                      ),
+                    ),
+                  ),
                   GoRoute(
                     path: RoutePaths.reminderDetail,
                     name: RouteNames.reminderDetail,
@@ -239,15 +301,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                 ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: RoutePaths.reminders,
-                name: RouteNames.reminders,
-                builder: (context, state) => const RemindersListScreen(),
               ),
             ],
           ),

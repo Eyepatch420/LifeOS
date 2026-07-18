@@ -815,7 +815,7 @@ as bool,
 /// @nodoc
 mixin _$HabitStreak {
 
- IconData get icon; String get title; int get streakDays; List<bool> get last7Days;
+ IconData get icon; String get title; int get streakDays; List<bool> get last7Days; String? get id;
 /// Create a copy of HabitStreak
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -826,16 +826,16 @@ $HabitStreakCopyWith<HabitStreak> get copyWith => _$HabitStreakCopyWithImpl<Habi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HabitStreak&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.last7Days, last7Days));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HabitStreak&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other.last7Days, last7Days)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,streakDays,const DeepCollectionEquality().hash(last7Days));
+int get hashCode => Object.hash(runtimeType,icon,title,streakDays,const DeepCollectionEquality().hash(last7Days),id);
 
 @override
 String toString() {
-  return 'HabitStreak(icon: $icon, title: $title, streakDays: $streakDays, last7Days: $last7Days)';
+  return 'HabitStreak(icon: $icon, title: $title, streakDays: $streakDays, last7Days: $last7Days, id: $id)';
 }
 
 
@@ -846,7 +846,7 @@ abstract mixin class $HabitStreakCopyWith<$Res>  {
   factory $HabitStreakCopyWith(HabitStreak value, $Res Function(HabitStreak) _then) = _$HabitStreakCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String title, int streakDays, List<bool> last7Days
+ IconData icon, String title, int streakDays, List<bool> last7Days, String? id
 });
 
 
@@ -863,13 +863,14 @@ class _$HabitStreakCopyWithImpl<$Res>
 
 /// Create a copy of HabitStreak
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? streakDays = null,Object? last7Days = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? title = null,Object? streakDays = null,Object? last7Days = null,Object? id = freezed,}) {
   return _then(_self.copyWith(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,streakDays: null == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
 as int,last7Days: null == last7Days ? _self.last7Days : last7Days // ignore: cast_nullable_to_non_nullable
-as List<bool>,
+as List<bool>,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -954,10 +955,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days,  String? id)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HabitStreak() when $default != null:
-return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
+return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days,_that.id);case _:
   return orElse();
 
 }
@@ -975,10 +976,10 @@ return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days,  String? id)  $default,) {final _that = this;
 switch (_that) {
 case _HabitStreak():
-return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
+return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days,_that.id);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -995,10 +996,10 @@ return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String title,  int streakDays,  List<bool> last7Days,  String? id)?  $default,) {final _that = this;
 switch (_that) {
 case _HabitStreak() when $default != null:
-return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
+return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days,_that.id);case _:
   return null;
 
 }
@@ -1010,7 +1011,7 @@ return $default(_that.icon,_that.title,_that.streakDays,_that.last7Days);case _:
 
 
 class _HabitStreak implements HabitStreak {
-  const _HabitStreak({required this.icon, required this.title, required this.streakDays, required final  List<bool> last7Days}): _last7Days = last7Days;
+  const _HabitStreak({required this.icon, required this.title, required this.streakDays, required final  List<bool> last7Days, this.id}): _last7Days = last7Days;
   
 
 @override final  IconData icon;
@@ -1023,6 +1024,7 @@ class _HabitStreak implements HabitStreak {
   return EqualUnmodifiableListView(_last7Days);
 }
 
+@override final  String? id;
 
 /// Create a copy of HabitStreak
 /// with the given fields replaced by the non-null parameter values.
@@ -1034,16 +1036,16 @@ _$HabitStreakCopyWith<_HabitStreak> get copyWith => __$HabitStreakCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HabitStreak&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other._last7Days, _last7Days));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HabitStreak&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.title, title) || other.title == title)&&(identical(other.streakDays, streakDays) || other.streakDays == streakDays)&&const DeepCollectionEquality().equals(other._last7Days, _last7Days)&&(identical(other.id, id) || other.id == id));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,title,streakDays,const DeepCollectionEquality().hash(_last7Days));
+int get hashCode => Object.hash(runtimeType,icon,title,streakDays,const DeepCollectionEquality().hash(_last7Days),id);
 
 @override
 String toString() {
-  return 'HabitStreak(icon: $icon, title: $title, streakDays: $streakDays, last7Days: $last7Days)';
+  return 'HabitStreak(icon: $icon, title: $title, streakDays: $streakDays, last7Days: $last7Days, id: $id)';
 }
 
 
@@ -1054,7 +1056,7 @@ abstract mixin class _$HabitStreakCopyWith<$Res> implements $HabitStreakCopyWith
   factory _$HabitStreakCopyWith(_HabitStreak value, $Res Function(_HabitStreak) _then) = __$HabitStreakCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String title, int streakDays, List<bool> last7Days
+ IconData icon, String title, int streakDays, List<bool> last7Days, String? id
 });
 
 
@@ -1071,13 +1073,14 @@ class __$HabitStreakCopyWithImpl<$Res>
 
 /// Create a copy of HabitStreak
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? streakDays = null,Object? last7Days = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? title = null,Object? streakDays = null,Object? last7Days = null,Object? id = freezed,}) {
   return _then(_HabitStreak(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,streakDays: null == streakDays ? _self.streakDays : streakDays // ignore: cast_nullable_to_non_nullable
 as int,last7Days: null == last7Days ? _self._last7Days : last7Days // ignore: cast_nullable_to_non_nullable
-as List<bool>,
+as List<bool>,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

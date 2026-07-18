@@ -96,15 +96,16 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: HeroScaffold(
-            hero: const HomeHeroSection(
-              greeting: 'Good afternoon',
-              dateLabel: 'Wednesday, 15 July 2026',
-              userName: 'dasdas',
-              tint: tint,
-              motivationalMessage:
-                  'Small progress today, big change tomorrow. Keep '
-                  'showing up for yourself every single day this week.',
-            ),
+            heroBuilder: (context, reportControlsRegion) =>
+                const HomeHeroSection(
+                  greeting: 'Good afternoon',
+                  dateLabel: 'Wednesday, 15 July 2026',
+                  userName: 'dasdas',
+                  tint: tint,
+                  motivationalMessage:
+                      'Small progress today, big change tomorrow. Keep '
+                      'showing up for yourself every single day this week.',
+                ),
             content: const SizedBox(height: 400),
           ),
         ),

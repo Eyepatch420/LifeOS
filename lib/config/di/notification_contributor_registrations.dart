@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lifeos/features/habits/presentation/providers/habits_notification_contributor.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_notification_contributor.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_notification_contributor.dart';
 import 'package:lifeos/features/notifications/domain/notification_contributor.dart';
@@ -15,5 +16,6 @@ List<NotificationContributor> notificationContributors(Ref ref) {
     const NotesNotificationContributor(),
     const ListsNotificationContributor(),
     const RemindersNotificationContributor(),
+    const HabitsNotificationContributor(),
   ];
 }

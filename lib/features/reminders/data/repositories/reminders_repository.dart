@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:lifeos/core/database/app_database.dart' as db;
 import 'package:lifeos/core/database/daos/reminders_dao.dart';
 import 'package:lifeos/core/events/event_bus.dart';
+import 'package:lifeos/features/reminders/domain/entities/recurrence_calculator.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/entities/reminder.dart';
 import 'package:lifeos/features/reminders/domain/events/reminder_events.dart';
@@ -73,12 +74,56 @@ class RemindersRepository {
     _eventBus.emit(ReminderUpdated(reminderId: id, title: title, dueAt: dueAt));
   }
 
+  /// The single semantic "complete this reminder" operation — every caller
+  /// (dashboard, list, detail) goes through this, never a divergent
+  /// recurrence-aware/non-aware split at the UI layer (see
+  /// docs/architecture_principles.md's standing rule against presentation
+  /// code branching on domain fields like `recurrence`).
+  ///
+  /// For a non-recurring reminder ([RecurrenceRule.none]), behaves exactly
+  /// as before: `isCompleted = true`, `completedAt = now`, emits
+  /// [ReminderCompleted] (cancels the pending notification).
+  ///
+  /// For a recurring reminder, "completing" it means completing *this*
+  /// occurrence and advancing to the next one — the single-row recurring
+  /// model chosen for Phase 4 (see reminders_repository.dart's module doc
+  /// and docs/architecture_principles.md's Reminders recurrence section):
+  /// `dueAt` advances to [nextOccurrence], the row stays/returns to
+  /// `isCompleted = false` (it's pending again, for its next occurrence),
+  /// `completedAt` stays null, and a [ReminderUpdated] is emitted instead
+  /// of [ReminderCompleted] — the correct notification-lifecycle
+  /// consequence is "reschedule for the new dueAt", not "cancel", since the
+  /// series is still active. If [nextOccurrence] returns null (only
+  /// possible for [RecurrenceRule.custom], whose semantics aren't defined —
+  /// see [nextOccurrence]'s doc comment), falls back to the non-recurring
+  /// completion behavior rather than silently doing nothing.
+  ///
+  /// [setCompleted]... false] (un-completing) is unchanged: only meaningful
+  /// for a non-recurring reminder that was previously completed (a
+  /// recurring reminder is never left `isCompleted = true` by this method),
+  /// and re-emits [ReminderUpdated] so its notification reschedules.
   Future<void> setCompleted(String id, bool isCompleted) async {
-    await _dao.setCompleted(id, isCompleted);
     if (isCompleted) {
-      _eventBus.emit(ReminderCompleted(reminderId: id));
+      final row = await _dao.getById(id);
+      if (row == null) return;
+
+      final recurrence = RecurrenceRule.fromStorageKey(row.recurrence);
+      final next = nextOccurrence(row.dueAt, recurrence);
+
+      if (next == null) {
+        await _dao.setCompleted(id, true);
+        _eventBus.emit(ReminderCompleted(reminderId: id));
+        return;
+      }
+
+      await _dao.updateFields(id, db.RemindersCompanion(dueAt: Value(next)));
+      _eventBus.emit(
+        ReminderUpdated(reminderId: id, title: row.title, dueAt: next),
+      );
       return;
     }
+
+    await _dao.setCompleted(id, false);
     // Un-completing a reminder is effectively "this is active again" —
     // treated as an update so a future occurrence gets rescheduled rather
     // than staying silently cancelled. Needs a re-read since the caller

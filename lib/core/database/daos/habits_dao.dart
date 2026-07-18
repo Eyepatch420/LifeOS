@@ -28,6 +28,12 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
     );
   }
 
+  Future<void> restore(String id) {
+    return (update(habits)..where((t) => t.id.equals(id))).write(
+      const HabitsCompanion(archivedAt: Value(null)),
+    );
+  }
+
   Stream<List<HabitCompletion>> watchCompletions(String habitId) {
     return (select(
       habitCompletions,
@@ -65,6 +71,35 @@ class HabitsDao extends DatabaseAccessor<AppDatabase> with _$HabitsDaoMixin {
           localDate: localDate,
         ),
       );
+    }
+  }
+
+  /// Sets (not toggles) the completion state for [habitId] on [localDate].
+  /// Unlike [toggleCompletion], calling this twice with the same
+  /// [completed] value is a no-op the second time — the canonical operation
+  /// for "mark today done"/"undo today" UI actions, where the caller knows
+  /// the target state rather than wanting to flip whatever it currently is.
+  Future<void> setCompletedForDate(
+    String habitId,
+    String localDate, {
+    required bool completed,
+    required String Function() newId,
+  }) async {
+    final existing = await _completionForDate(habitId, localDate);
+    if (completed) {
+      if (existing != null) return;
+      await into(habitCompletions).insert(
+        HabitCompletionsCompanion.insert(
+          id: newId(),
+          habitId: habitId,
+          localDate: localDate,
+        ),
+      );
+    } else {
+      if (existing == null) return;
+      await (delete(
+        habitCompletions,
+      )..where((t) => t.id.equals(existing.id))).go();
     }
   }
 }

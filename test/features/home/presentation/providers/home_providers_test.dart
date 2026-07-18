@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
+import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/home/data/mock_dashboard_data.dart';
 import 'package:lifeos/features/home/presentation/providers/home_providers.dart';
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
@@ -28,7 +30,6 @@ void main() {
       );
       expect(await container.read(quickActionsProvider.future), kQuickActions);
       expect(await container.read(upNextProvider.future), kUpNext);
-      expect(await container.read(habitStreaksProvider.future), kHabitStreaks);
       expect(await container.read(timelineProvider.future), kTimeline);
     },
   );
@@ -63,6 +64,39 @@ void main() {
       final notes = await container.read(recentNotesProvider.future);
       expect(notes, hasLength(1));
       expect(notes.single.title, 'Groceries');
+    },
+  );
+
+  test(
+    'habitStreaksProvider is a thin watch of habitsDashboardProvider',
+    () async {
+      final db = AppDatabase.forTesting(
+        DatabaseConnection(
+          NativeDatabase.memory(),
+          closeStreamsSynchronously: true,
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+      addTearDown(db.close);
+      final sub = container.listen(habitStreaksProvider, (_, _) {});
+      addTearDown(sub.close);
+
+      await container
+          .read(habitsRepositoryProvider)
+          .create(
+            id: 'h1',
+            title: 'Morning Walk',
+            schedule: const HabitSchedule.daily(),
+            icon: 'walk',
+          );
+
+      final streaks = await container.read(habitStreaksProvider.future);
+      expect(streaks, hasLength(1));
+      expect(streaks.single.title, 'Morning Walk');
+      expect(streaks.single.id, 'h1');
     },
   );
 

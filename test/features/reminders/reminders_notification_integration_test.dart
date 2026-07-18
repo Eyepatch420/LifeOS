@@ -5,6 +5,7 @@ import 'package:lifeos/core/events/event_bus.dart';
 import 'package:lifeos/core/notifications/notification_engine.dart';
 import 'package:lifeos/core/services/notification_scheduler.dart';
 import 'package:lifeos/features/reminders/data/repositories/reminders_repository.dart';
+import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_notification_contributor.dart';
 
 class _FakeScheduler implements NotificationScheduler {
@@ -128,5 +129,44 @@ void main() {
     expect(scheduler.scheduled, ['r1', 'r1']);
     expect(scheduler.lastScheduledWhen, newDueAt);
     expect(scheduler.lastScheduledTitle, 'Pay rent (updated)');
+  });
+
+  test('completing a DAILY recurring reminder reschedules its notification '
+      'for the next occurrence instead of cancelling it', () async {
+    final dueAt = DateTime(2026, 6, 15, 9);
+    await repository.create(
+      id: 'r1',
+      title: 'Take medicine',
+      dueAt: dueAt,
+      isUrgent: false,
+      recurrence: RecurrenceRule.daily,
+    );
+    await pumpEventQueue();
+
+    await repository.setCompleted('r1', true);
+    await pumpEventQueue();
+
+    // Rescheduled (scheduleAt overwrites the id-1 slot), never cancelled —
+    // the series is still active.
+    expect(scheduler.cancelled, isEmpty);
+    expect(scheduler.scheduled, ['r1', 'r1']);
+    expect(scheduler.lastScheduledWhen, DateTime(2026, 6, 16, 9));
+  });
+
+  test('completing a non-recurring reminder still cancels rather than '
+      'reschedules', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'One-off',
+      dueAt: DateTime(2026, 1, 1),
+      isUrgent: false,
+    );
+    await pumpEventQueue();
+
+    await repository.setCompleted('r1', true);
+    await pumpEventQueue();
+
+    expect(scheduler.cancelled, ['r1']);
+    expect(scheduler.scheduled, ['r1']);
   });
 }

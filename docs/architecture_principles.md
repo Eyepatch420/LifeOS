@@ -24,7 +24,7 @@ Every feature is exactly one of three types.
 
 1. **Home imports only dashboard summary providers**, never feature repositories or entities. Home doesn't know `Note`, markdown, pin, undo, or share exist — only `RecentNotesSummary`.
 2. **Every Type A feature exposes exactly five things** (its contract): **Entity · Repository · Dashboard Provider · Search Contributor · Notification Contributor.** Nothing else is imported cross-feature.
-3. **Cross-feature communication happens ONLY through**: dashboard summary providers, Search contributors, Agenda contributors, Notification events, and shared services (`core/services/`).
+3. **Cross-feature communication happens ONLY through**: dashboard summary providers, Search contributors, Agenda contributors, Planner contributors, Notification events, and shared services (`core/services/`).
 4. **Settings never stores anything** — it is UI only, editing existing providers (theme, focus, notifications, home sections, quick actions).
 5. **Repositories never create notifications.** They emit domain events (`ReminderCreated`, `ReminderOverdue`, `HabitCompleted`, `ExpenseDue`, …); the NotificationEngine consumes events. Analytics/achievements/widgets/AI summaries later consume the same event stream.
 6. **Every Type A feature must be completely removable without breaking compilation of any unrelated feature.** Deleting `features/notes` should only break notes' own registration, routes, and provider wiring at the composition layer (`config/di/`, `app_router.dart`, the registries) — never Home, Search, Settings, or any other feature's source. A cascading failure elsewhere is a coupling bug to fix, not an acceptable exception. An import-boundary test (introduced alongside the Notes feature — see `docs/home_module_dependency_graph.md` Phase 2A) enforces this automatically by scanning `lib/features/*/` import graphs.
@@ -45,8 +45,13 @@ Cross-feature communication must happen only through:
 - Dashboard Summary Providers
 - Search Contributors
 - Agenda Contributors
+- Planner Contributors
 - Notification Events
 - Shared Services
+
+## Planner Contributors (added Module 4 Phase 6)
+
+Once a second real Type A feature (Habits) needed to appear in the Planner day-timeline alongside Reminders, `PlannerContributor` (`core/planner/planner_contributor.dart`) was introduced as a fourth contributor-style seam, mirroring `SearchContributor`/`NotificationContributor`/`AgendaContributor`'s shape exactly: an interface exposing a live `Stream<List<PlannerItem>>` plus a feature-specific `complete()` operation, registered at `config/di/planner_contributor_registrations.dart` (the only place allowed to import every feature's contributor). `PlannerItem` itself lives in `core/planner/` (not a feature) for the same reason `AgendaEntry`/`SearchableEntity` do — a feature-owned type can't be imported by a second feature without violating the Golden Rule above. `PlannerScreen` and its providers only ever see `List<PlannerItem>`; adding a third source (e.g. Events) is a new contributor + one registration line, never a `PlannerScreen` change.
 
 ## Other standing rules (unchanged from Module 1–3)
 

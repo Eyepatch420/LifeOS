@@ -30,6 +30,7 @@ enum SearchableEntityCategory {
   list,
   upNext,
   reminder,
+  habit,
   home,
   remindersTab,
   health,

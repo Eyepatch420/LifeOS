@@ -172,6 +172,97 @@ void main() {
     },
   );
 
+  test('setCompleted(true) on a DAILY recurring reminder advances dueAt to the '
+      'next day, stays pending, and emits ReminderUpdated instead of '
+      'ReminderCompleted', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Take medicine',
+      dueAt: DateTime(2026, 6, 15, 9),
+      isUrgent: false,
+      recurrence: RecurrenceRule.daily,
+    );
+
+    final events = <DomainEvent>[];
+    final sub = eventBus.events.listen(events.add);
+
+    await repository.setCompleted('r1', true);
+    await pumpEventQueue();
+
+    final reminder = await repository.getById('r1');
+    expect(reminder!.isCompleted, isFalse);
+    expect(reminder.completedAt, isNull);
+    expect(reminder.dueAt, DateTime(2026, 6, 16, 9));
+    expect(reminder.recurrence, RecurrenceRule.daily);
+
+    expect(events, hasLength(1));
+    final event = events.single;
+    expect(event, isA<ReminderUpdated>());
+    expect((event as ReminderUpdated).dueAt, DateTime(2026, 6, 16, 9));
+    await sub.cancel();
+  });
+
+  test('setCompleted(true) on a MONTHLY recurring reminder advances dueAt by '
+      'one calendar month', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Pay rent',
+      dueAt: DateTime(2026, 1, 31, 9),
+      isUrgent: false,
+      recurrence: RecurrenceRule.monthly,
+    );
+
+    await repository.setCompleted('r1', true);
+
+    final reminder = await repository.getById('r1');
+    expect(reminder!.dueAt, DateTime(2026, 2, 28, 9));
+    expect(reminder.isCompleted, isFalse);
+  });
+
+  test('setCompleted(true) on a CUSTOM recurring reminder (no defined rule '
+      'language) falls back to permanent completion instead of silently '
+      'doing nothing', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Undefined custom rule',
+      dueAt: DateTime(2026, 1, 1),
+      isUrgent: false,
+      recurrence: RecurrenceRule.custom,
+    );
+
+    final events = <DomainEvent>[];
+    final sub = eventBus.events.listen(events.add);
+
+    await repository.setCompleted('r1', true);
+    await pumpEventQueue();
+
+    final reminder = await repository.getById('r1');
+    expect(reminder!.isCompleted, isTrue);
+    expect(reminder.completedAt, isNotNull);
+    expect(events.single, isA<ReminderCompleted>());
+    await sub.cancel();
+  });
+
+  test('completing successive DAILY occurrences advances dueAt each time, '
+      'never becoming permanently completed', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Water plants',
+      dueAt: DateTime(2026, 6, 15, 8),
+      isUrgent: false,
+      recurrence: RecurrenceRule.daily,
+    );
+
+    await repository.setCompleted('r1', true);
+    var reminder = await repository.getById('r1');
+    expect(reminder!.dueAt, DateTime(2026, 6, 16, 8));
+
+    await repository.setCompleted('r1', true);
+    reminder = await repository.getById('r1');
+    expect(reminder!.dueAt, DateTime(2026, 6, 17, 8));
+    expect(reminder.isCompleted, isFalse);
+  });
+
   test(
     'delete + restore round-trips (soft delete) and emits ReminderDeleted',
     () async {

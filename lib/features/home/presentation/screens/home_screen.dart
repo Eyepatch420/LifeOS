@@ -31,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
 
     return FloatingPageLayout(
       body: HeroScaffold(
-        hero: HomeHeroSection(
+        heroBuilder: (context, reportControlsRegion) => HomeHeroSection(
           greeting: tint.greeting,
           dateLabel: DateFormat('EEEE, d MMMM yyyy').format(now),
           userName: profile?.name ?? '',
@@ -40,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
           onSearchTap: () => context.pushNamed(RouteNames.search),
           onNotificationsTap: () => context.pushNamed(RouteNames.notifications),
           onAvatarTap: () => context.pushNamed(RouteNames.profile),
+          onControlsRegionMeasured: reportControlsRegion,
         ),
         content: Padding(
           padding: const EdgeInsets.fromLTRB(

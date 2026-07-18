@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
+import 'package:lifeos/features/habits/presentation/providers/habits_search_contributor.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_provider.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_search_contributor.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
@@ -16,5 +18,6 @@ List<SearchContributor> searchContributors(Ref ref) {
     NotesSearchContributor(ref.watch(notesRepositoryProvider)),
     ListsSearchContributor(ref.watch(listsRepositoryProvider)),
     RemindersSearchContributor(ref.watch(remindersRepositoryProvider)),
+    HabitsSearchContributor(ref.watch(habitsRepositoryProvider)),
   ];
 }

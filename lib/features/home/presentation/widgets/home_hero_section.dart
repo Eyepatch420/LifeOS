@@ -17,7 +17,13 @@ import 'package:lifeos/theme/time_of_day_theme.dart';
 /// `userProfileNotifierProvider` and passes the resolved greeting/date/name
 /// down as props, matching every other Home section widget's "props in, no
 /// provider reads" pattern.
-class HomeHeroSection extends StatelessWidget {
+///
+/// Measures the search/notification/avatar row's on-screen bounds after
+/// every layout and reports them via [onControlsRegionMeasured] (in global
+/// coordinates — see [HeroControlsRegionReporter]) so `HeroScaffold` can
+/// keep its scroll view from swallowing taps meant for these buttons. This
+/// widget has no idea `HeroScaffold` exists beyond that callback's shape.
+class HomeHeroSection extends StatefulWidget {
   const HomeHeroSection({
     required this.greeting,
     required this.dateLabel,
@@ -29,6 +35,7 @@ class HomeHeroSection extends StatelessWidget {
     this.onNotificationsTap,
     this.onAvatarTap,
     this.onBannerTap,
+    this.onControlsRegionMeasured,
   });
 
   final String greeting;
@@ -40,15 +47,55 @@ class HomeHeroSection extends StatelessWidget {
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onAvatarTap;
   final VoidCallback? onBannerTap;
+  final HeroControlsRegionReporter? onControlsRegionMeasured;
+
+  @override
+  State<HomeHeroSection> createState() => _HomeHeroSectionState();
+}
+
+class _HomeHeroSectionState extends State<HomeHeroSection> {
+  final GlobalKey _controlsRowKey = GlobalKey();
+
+  @override
+  void didUpdateWidget(covariant HomeHeroSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleMeasure();
+  }
+
+  @override
+  void dispose() {
+    // Nothing further to report once this widget is gone.
+    widget.onControlsRegionMeasured?.call(null);
+    super.dispose();
+  }
+
+  void _scheduleMeasure() {
+    final reporter = widget.onControlsRegionMeasured;
+    if (reporter == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _controlsRowKey.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) {
+        reporter(null);
+        return;
+      }
+      reporter(box.localToGlobal(Offset.zero) & box.size);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    _scheduleMeasure();
     return LayoutBuilder(
       builder: (context, constraints) {
         final heroHeight = HeroScaffold.heroHeightFor(constraints.maxWidth);
         return Stack(
           children: [
-            GradientHeroBackground(height: heroHeight, tint: tint),
+            GradientHeroBackground(
+              height: heroHeight,
+              overlayGradient: widget.tint.gradient,
+              overlayKey: widget.tint.bucket,
+            ),
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -64,6 +111,7 @@ class HomeHeroSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        key: _controlsRowKey,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
@@ -71,14 +119,16 @@ class HomeHeroSection extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '$greeting,',
+                                  '${widget.greeting},',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 15,
                                   ),
                                 ),
                                 Text(
-                                  userName.isNotEmpty ? userName : 'there',
+                                  widget.userName.isNotEmpty
+                                      ? widget.userName
+                                      : 'there',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 26,
@@ -93,17 +143,17 @@ class HomeHeroSection extends StatelessWidget {
                             child: _HeroIconButton(
                               icon: Icons.search,
                               semanticsLabel: 'Search',
-                              onTap: onSearchTap,
+                              onTap: widget.onSearchTap,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           _HeroIconButton(
                             icon: Icons.notifications_outlined,
                             semanticsLabel: 'Notifications',
-                            onTap: onNotificationsTap,
+                            onTap: widget.onNotificationsTap,
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          _HeroAvatar(onTap: onAvatarTap),
+                          _HeroAvatar(onTap: widget.onAvatarTap),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -116,7 +166,7 @@ class HomeHeroSection extends StatelessWidget {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            dateLabel,
+                            widget.dateLabel,
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -126,8 +176,8 @@ class HomeHeroSection extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       MotivationalBanner(
-                        message: motivationalMessage,
-                        onTap: onBannerTap,
+                        message: widget.motivationalMessage,
+                        onTap: widget.onBannerTap,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
                     ],

@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lifeos/core/extensions/datetime_extensions.dart';
 import 'package:lifeos/shared/widgets/media/gradient_hero_background.dart';
-import 'package:lifeos/theme/time_of_day_theme.dart';
 
 void main() {
-  const morning = TimeOfDayTint(
-    gradient: [Color(0xFF2F6FED), Color(0xFF5B9BF0)],
-    greeting: 'Good morning',
-    bucket: TimeOfDayBucket.morning,
-  );
-  const evening = TimeOfDayTint(
-    gradient: [Color(0xFF7A5CC9), Color(0xFF4F3B8F)],
-    greeting: 'Good evening',
-    bucket: TimeOfDayBucket.evening,
-  );
+  const morningGradient = [Color(0xFF2F6FED), Color(0xFF5B9BF0)];
+  const eveningGradient = [Color(0xFF7A5CC9), Color(0xFF4F3B8F)];
 
   testWidgets('renders with the default assetPath when unspecified', (
     tester,
@@ -23,7 +13,11 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: GradientHeroBackground(height: 240, tint: morning),
+          body: GradientHeroBackground(
+            height: 240,
+            overlayGradient: morningGradient,
+            overlayKey: 'morning',
+          ),
         ),
       ),
     );
@@ -41,7 +35,8 @@ void main() {
         home: Scaffold(
           body: GradientHeroBackground(
             height: 240,
-            tint: morning,
+            overlayGradient: morningGradient,
+            overlayKey: 'morning',
             assetPath: 'assets/svg/health/custom_hero.svg',
           ),
         ),
@@ -55,11 +50,15 @@ void main() {
     );
   });
 
-  testWidgets('tint change does not throw', (tester) async {
+  testWidgets('overlay gradient change does not throw', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: GradientHeroBackground(height: 240, tint: morning),
+          body: GradientHeroBackground(
+            height: 240,
+            overlayGradient: morningGradient,
+            overlayKey: 'morning',
+          ),
         ),
       ),
     );
@@ -68,11 +67,34 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: GradientHeroBackground(height: 240, tint: evening),
+          body: GradientHeroBackground(
+            height: 240,
+            overlayGradient: eveningGradient,
+            overlayKey: 'evening',
+          ),
         ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 150));
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('renders correctly with no overlayKey supplied (static '
+      'gradient that never changes for the widget\'s lifetime)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: GradientHeroBackground(
+            height: 240,
+            overlayGradient: morningGradient,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
 
     expect(tester.takeException(), isNull);
   });

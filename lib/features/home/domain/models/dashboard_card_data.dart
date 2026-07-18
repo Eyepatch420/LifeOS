@@ -41,7 +41,10 @@ abstract class UpNextItem with _$UpNextItem {
   }) = _UpNextItem;
 }
 
-/// One row in the "Habit Streaks" list.
+/// One row in the "Habit Streaks" list. `id` is nullable for the same
+/// reason as [NoteSummary.id]/[ListSummary.id] — mock-seeded rows have
+/// none; rows sourced from `habitsDashboardProvider` always set it, which
+/// is what tapping through to `HabitDetailScreen` keys off.
 @freezed
 abstract class HabitStreak with _$HabitStreak {
   const factory HabitStreak({
@@ -49,6 +52,7 @@ abstract class HabitStreak with _$HabitStreak {
     required String title,
     required int streakDays,
     required List<bool> last7Days,
+    String? id,
   }) = _HabitStreak;
 }
 

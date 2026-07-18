@@ -93,27 +93,6 @@ const List<UpNextItem> kUpNext = [
   ),
 ];
 
-const List<HabitStreak> kHabitStreaks = [
-  HabitStreak(
-    icon: Icons.directions_walk,
-    title: 'Morning Walk',
-    streakDays: 12,
-    last7Days: [true, true, true, true, true, true, false],
-  ),
-  HabitStreak(
-    icon: Icons.menu_book_outlined,
-    title: 'Read 20 Pages',
-    streakDays: 7,
-    last7Days: [true, true, true, true, true, true, false],
-  ),
-  HabitStreak(
-    icon: Icons.water_drop_outlined,
-    title: 'Drink 2L Water',
-    streakDays: 5,
-    last7Days: [true, true, true, true, true, false, false],
-  ),
-];
-
 const List<TimelineStep> kTimeline = [
   TimelineStep(
     id: 'timeline-medicine',

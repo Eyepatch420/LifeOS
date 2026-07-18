@@ -33,6 +33,8 @@ class SearchScreen extends ConsumerWidget {
         // No detail screen exists yet for these categories — pop back to
         // Home, where the matching section is already visible.
         context.pop();
+      case SearchableEntityCategory.habit:
+        context.pushNamed(e.routeName, pathParameters: e.pathParameters!);
     }
   }
 

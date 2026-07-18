@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/animations/presets.dart';
 import 'package:lifeos/core/animations/shared_motion.dart';
 import 'package:lifeos/core/constants/app_spacing.dart';
 import 'package:lifeos/core/extensions/context_extensions.dart';
+import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/entities/reminder.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/layouts/pushed_screen_header.dart';
 import 'package:lifeos/shared/widgets/layouts/pushed_screen_layout.dart';
 
-/// Full Reminders list — mirrors `NotesListScreen`'s shape: reads
+/// Full Reminders list — the canonical full reminder management screen,
+/// reachable via the dashboard's "View all" (see `RoutePaths.remindersAll`,
+/// nested under the Reminders branch's own `/reminders` route since Phase
+/// 4). Mirrors `NotesListScreen`'s shape: reads
 /// `RemindersRepository.watchAll()` directly (a live stream, not a one-shot
 /// list), swipe-to-delete with undo, and a completion toggle in place of
 /// Notes' pin toggle.
@@ -38,11 +43,65 @@ class RemindersListScreen extends ConsumerWidget {
     );
   }
 
+  /// The single semantic completion operation (see
+  /// `RemindersRepository.setCompleted`'s doc comment) — for a recurring
+  /// reminder this advances it to its next occurrence rather than leaving
+  /// it completed, so a snackbar surfaces that distinction the same way
+  /// `ReminderDetailScreen` does; a plain reminder just gets a lighter
+  /// "Completed"/"Marked as pending" acknowledgement.
+  Future<void> _toggleCompleted(
+    BuildContext context,
+    WidgetRef ref,
+    Reminder reminder,
+  ) async {
+    final repository = ref.read(remindersRepositoryProvider);
+    final wasCompleted = reminder.isCompleted;
+    await repository.setCompleted(reminder.id, !wasCompleted);
+    if (!context.mounted) return;
+
+    if (wasCompleted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Marked as pending')));
+      return;
+    }
+
+    if (reminder.recurrence == RecurrenceRule.none) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Reminder completed')));
+      return;
+    }
+
+    final refreshed = await repository.getById(reminder.id);
+    if (!context.mounted || refreshed == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Completed. Next reminder: '
+          '${DateFormat('EEE, d MMM • h:mm a').format(refreshed.dueAt)}',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repository = ref.watch(remindersRepositoryProvider);
     return PushedScreenLayout(
-      header: const PushedScreenHeader(title: 'Reminders'),
+      header: Row(
+        children: [
+          const Expanded(child: PushedScreenHeader(title: 'Reminders')),
+          Semantics(
+            button: true,
+            label: 'Add reminder',
+            child: IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => context.pushNamed(RouteNames.newReminder),
+            ),
+          ),
+        ],
+      ),
       content: StreamBuilder<List<Reminder>>(
         stream: repository.watchAll(),
         builder: (context, snapshot) {
@@ -51,9 +110,11 @@ class RemindersListScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (reminders.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.notifications_active_outlined,
               message: 'No reminders yet',
+              ctaLabel: 'Add Reminder',
+              onCtaTap: () => context.pushNamed(RouteNames.newReminder),
             );
           }
           final sorted = [...reminders]
@@ -63,10 +124,8 @@ class RemindersListScreen extends ConsumerWidget {
               for (final reminder in sorted)
                 _ReminderListTile(
                   reminder: reminder,
-                  onToggleCompleted: () => repository.setCompleted(
-                    reminder.id,
-                    !reminder.isCompleted,
-                  ),
+                  onToggleCompleted: () =>
+                      _toggleCompleted(context, ref, reminder),
                   onDismissed: () => _deleteWithUndo(context, ref, reminder),
                 ),
             ],
@@ -129,15 +188,37 @@ class _ReminderListTile extends StatelessWidget {
               ? const TextStyle(decoration: TextDecoration.lineThrough)
               : null,
         ),
-        subtitle: Text(reminder.dueAt.toString()),
-        trailing: IconButton(
-          icon: Icon(
-            reminder.isCompleted
-                ? Icons.check_circle
-                : Icons.check_circle_outline,
-            color: reminder.isCompleted ? context.colorScheme.primary : null,
+        subtitle: Row(
+          children: [
+            Flexible(
+              child: Text(
+                DateFormat('EEE, d MMM • h:mm a').format(reminder.dueAt),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (reminder.recurrence != RecurrenceRule.none) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Icon(
+                Icons.repeat,
+                size: 14,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ],
+        ),
+        trailing: Semantics(
+          button: true,
+          label: reminder.isCompleted ? 'Mark as pending' : 'Mark as completed',
+          child: IconButton(
+            icon: Icon(
+              reminder.isCompleted
+                  ? Icons.check_circle
+                  : Icons.check_circle_outline,
+              color: reminder.isCompleted ? context.colorScheme.primary : null,
+            ),
+            onPressed: onToggleCompleted,
           ),
-          onPressed: onToggleCompleted,
         ),
         onTap: () => context.pushNamed(
           RouteNames.reminderDetail,

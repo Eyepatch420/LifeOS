@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/features/home/data/mock_dashboard_data.dart';
 import 'package:lifeos/features/home/domain/models/dashboard_card_data.dart';
 import 'package:lifeos/features/home/domain/models/home_section_config.dart';
+import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_provider.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
@@ -52,9 +53,31 @@ final upNextProvider = AsyncNotifierProvider<UpNextNotifier, List<UpNextItem>>(
   UpNextNotifier.new,
 );
 
+/// Same thin-watch shape as [RecentNotesNotifier]/[MyListsNotifier], for
+/// `features/habits` — Home never imports `Habit`/`HabitsRepository`, only
+/// `habitsDashboardProvider`'s [HabitsSummary] (see
+/// docs/architecture_principles.md's Architecture Constraint 1). Maps each
+/// [HabitStreakSummary] to the existing [HabitStreak] card model so
+/// `HabitStreaksCard` and every other call site is unchanged; the icon is a
+/// single fixed [Icons.track_changes_outlined] since [Habit.icon] is
+/// currently a persisted string identifier with no icon-lookup table yet
+/// (see `Habit`'s doc comment) — a real per-habit icon picker is future
+/// work, not part of this phase's MVP scope.
 class HabitStreaksNotifier extends AsyncNotifier<List<HabitStreak>> {
   @override
-  Future<List<HabitStreak>> build() async => kHabitStreaks;
+  Future<List<HabitStreak>> build() async {
+    final summary = await ref.watch(habitsDashboardProvider.future);
+    return [
+      for (final streak in summary.streaks)
+        HabitStreak(
+          id: streak.id,
+          icon: Icons.track_changes_outlined,
+          title: streak.title,
+          streakDays: streak.streakDays,
+          last7Days: streak.last7Days,
+        ),
+    ];
+  }
 }
 
 final habitStreaksProvider =
