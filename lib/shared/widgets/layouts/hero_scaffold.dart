@@ -20,7 +20,7 @@ class HeroScaffold extends StatefulWidget {
     required this.content,
     super.key,
     this.heroOverlap = 24,
-    this.sheetRadius = 28,
+    this.sheetRadius = 36,
   });
 
   final Widget hero;
@@ -38,7 +38,7 @@ class HeroScaffold extends StatefulWidget {
   /// a responsive fraction of width so the tablet-landscape SVG art crops
   /// sensibly via `cover` on any phone size (see docs/theme.md).
   static double heroHeightFor(double width) =>
-      (width * 0.62).clamp(240.0, 340.0);
+      (width * 0.62).clamp(330.0, 380.0);
 
   @override
   State<HeroScaffold> createState() => _HeroScaffoldState();
@@ -114,7 +114,7 @@ class _HeroScaffoldState extends State<HeroScaffold> {
                         minHeight: constraints.maxHeight,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(widget.sheetRadius),
                         ),

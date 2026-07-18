@@ -60,6 +60,7 @@ class HomeHeroSection extends StatelessWidget {
                 child: FadeSlideIn(
                   duration: AppMotionPresets.hero.duration,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -123,12 +124,12 @@ class HomeHeroSection extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const Spacer(),
+                      const SizedBox(height: AppSpacing.md),
                       MotivationalBanner(
                         message: motivationalMessage,
                         onTap: onBannerTap,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.xxl),
                     ],
                   ),
                 ),
