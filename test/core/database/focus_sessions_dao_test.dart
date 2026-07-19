@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/core/database/app_database.dart';
@@ -15,7 +16,7 @@ void main() {
     expect(await db.focusSessionsDao.watchActive().first, isNull);
   });
 
-  test('watchActive returns the session while endedAt is null', () async {
+  test('watchActive returns the session while status is running', () async {
     await db.focusSessionsDao.upsert(
       FocusSessionsCompanion.insert(
         id: 'f1',
@@ -30,7 +31,7 @@ void main() {
     expect(active!.id, 'f1');
   });
 
-  test('end sets endedAt; watchActive no longer returns it', () async {
+  test('setting status to completed removes it from watchActive', () async {
     final now = DateTime.now();
     await db.focusSessionsDao.upsert(
       FocusSessionsCompanion.insert(
@@ -41,7 +42,13 @@ void main() {
       ),
     );
 
-    await db.focusSessionsDao.end('f1', now.add(const Duration(minutes: 25)));
+    await db.focusSessionsDao.updateFields(
+      'f1',
+      FocusSessionsCompanion(
+        status: const Value('completed'),
+        endedAt: Value(now.add(const Duration(minutes: 25))),
+      ),
+    );
 
     expect(await db.focusSessionsDao.watchActive().first, isNull);
     final all = await db.focusSessionsDao.watchAll().first;
@@ -58,7 +65,13 @@ void main() {
         kind: 'focus',
       ),
     );
-    await db.focusSessionsDao.end('old', now);
+    await db.focusSessionsDao.updateFields(
+      'old',
+      FocusSessionsCompanion(
+        status: const Value('completed'),
+        endedAt: Value(now),
+      ),
+    );
     await db.focusSessionsDao.upsert(
       FocusSessionsCompanion.insert(
         id: 'new',

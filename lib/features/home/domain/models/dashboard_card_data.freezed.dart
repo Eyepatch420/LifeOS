@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OverviewStat {
 
- IconData get icon; String get label; String get value; String get subtitle; double get progress;
+ IconData get icon; String get label; String get value; String get subtitle; double get progress; VoidCallback? get onTap;
 /// Create a copy of OverviewStat
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $OverviewStatCopyWith<OverviewStat> get copyWith => _$OverviewStatCopyWithImpl<O
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OverviewStat&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OverviewStat&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.onTap, onTap) || other.onTap == onTap));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,label,value,subtitle,progress);
+int get hashCode => Object.hash(runtimeType,icon,label,value,subtitle,progress,onTap);
 
 @override
 String toString() {
-  return 'OverviewStat(icon: $icon, label: $label, value: $value, subtitle: $subtitle, progress: $progress)';
+  return 'OverviewStat(icon: $icon, label: $label, value: $value, subtitle: $subtitle, progress: $progress, onTap: $onTap)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $OverviewStatCopyWith<$Res>  {
   factory $OverviewStatCopyWith(OverviewStat value, $Res Function(OverviewStat) _then) = _$OverviewStatCopyWithImpl;
 @useResult
 $Res call({
- IconData icon, String label, String value, String subtitle, double progress
+ IconData icon, String label, String value, String subtitle, double progress, VoidCallback? onTap
 });
 
 
@@ -62,14 +62,15 @@ class _$OverviewStatCopyWithImpl<$Res>
 
 /// Create a copy of OverviewStat
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? label = null,Object? value = null,Object? subtitle = null,Object? progress = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? icon = null,Object? label = null,Object? value = null,Object? subtitle = null,Object? progress = null,Object? onTap = freezed,}) {
   return _then(_self.copyWith(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
-as double,
+as double,onTap: freezed == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
+as VoidCallback?,
   ));
 }
 
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String label,  String value,  String subtitle,  double progress)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( IconData icon,  String label,  String value,  String subtitle,  double progress,  VoidCallback? onTap)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OverviewStat() when $default != null:
-return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress,_that.onTap);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String label,  String value,  String subtitle,  double progress)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( IconData icon,  String label,  String value,  String subtitle,  double progress,  VoidCallback? onTap)  $default,) {final _that = this;
 switch (_that) {
 case _OverviewStat():
-return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress,_that.onTap);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String label,  String value,  String subtitle,  double progress)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( IconData icon,  String label,  String value,  String subtitle,  double progress,  VoidCallback? onTap)?  $default,) {final _that = this;
 switch (_that) {
 case _OverviewStat() when $default != null:
-return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress);case _:
+return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress,_that.onTap);case _:
   return null;
 
 }
@@ -210,7 +211,7 @@ return $default(_that.icon,_that.label,_that.value,_that.subtitle,_that.progress
 
 
 class _OverviewStat implements OverviewStat {
-  const _OverviewStat({required this.icon, required this.label, required this.value, required this.subtitle, required this.progress});
+  const _OverviewStat({required this.icon, required this.label, required this.value, required this.subtitle, required this.progress, this.onTap});
   
 
 @override final  IconData icon;
@@ -218,6 +219,7 @@ class _OverviewStat implements OverviewStat {
 @override final  String value;
 @override final  String subtitle;
 @override final  double progress;
+@override final  VoidCallback? onTap;
 
 /// Create a copy of OverviewStat
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +231,16 @@ _$OverviewStatCopyWith<_OverviewStat> get copyWith => __$OverviewStatCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OverviewStat&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OverviewStat&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.onTap, onTap) || other.onTap == onTap));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,icon,label,value,subtitle,progress);
+int get hashCode => Object.hash(runtimeType,icon,label,value,subtitle,progress,onTap);
 
 @override
 String toString() {
-  return 'OverviewStat(icon: $icon, label: $label, value: $value, subtitle: $subtitle, progress: $progress)';
+  return 'OverviewStat(icon: $icon, label: $label, value: $value, subtitle: $subtitle, progress: $progress, onTap: $onTap)';
 }
 
 
@@ -249,7 +251,7 @@ abstract mixin class _$OverviewStatCopyWith<$Res> implements $OverviewStatCopyWi
   factory _$OverviewStatCopyWith(_OverviewStat value, $Res Function(_OverviewStat) _then) = __$OverviewStatCopyWithImpl;
 @override @useResult
 $Res call({
- IconData icon, String label, String value, String subtitle, double progress
+ IconData icon, String label, String value, String subtitle, double progress, VoidCallback? onTap
 });
 
 
@@ -266,14 +268,15 @@ class __$OverviewStatCopyWithImpl<$Res>
 
 /// Create a copy of OverviewStat
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? label = null,Object? value = null,Object? subtitle = null,Object? progress = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? icon = null,Object? label = null,Object? value = null,Object? subtitle = null,Object? progress = null,Object? onTap = freezed,}) {
   return _then(_OverviewStat(
 icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as IconData,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
 as String,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
-as double,
+as double,onTap: freezed == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
+as VoidCallback?,
   ));
 }
 

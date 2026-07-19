@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:lifeos/core/animations/curves.dart';
 import 'package:lifeos/core/animations/durations.dart';
+import 'package:lifeos/core/animations/shared_motion.dart';
 import 'package:lifeos/core/extensions/context_extensions.dart';
 
 /// One of the 4 overview stat tiles — icon, count, subtext, progress bar.
 /// Reusable for future stat tiles (e.g. Finance summary cards).
+///
+/// [onTap] is optional — most existing stat cards (Tasks, Habits, Mood as
+/// of Phase 8) have no wired destination yet and stay inert exactly as
+/// before; only a card whose caller supplies [onTap] (Focus, as of Phase
+/// 8) becomes a real [PressableScale] button with a semantics label.
 class StatCard extends StatelessWidget {
   const StatCard({
     required this.icon,
@@ -14,6 +20,7 @@ class StatCard extends StatelessWidget {
     required this.progress,
     required this.accentColor,
     super.key,
+    this.onTap,
   });
 
   final IconData icon;
@@ -22,10 +29,11 @@ class StatCard extends StatelessWidget {
   final String subtitle;
   final double progress;
   final Color accentColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.colorScheme.surfaceContainerLow,
@@ -85,6 +93,13 @@ class StatCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return card;
+    return Semantics(
+      button: true,
+      label: '$label, $value, $subtitle',
+      child: PressableScale(onTap: onTap, child: card),
     );
   }
 }

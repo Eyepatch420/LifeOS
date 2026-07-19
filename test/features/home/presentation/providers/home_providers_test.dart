@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/features/calendar/presentation/providers/calendar_dashboard_provider.dart';
 import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/home/data/mock_dashboard_data.dart';
@@ -11,6 +12,22 @@ import 'package:lifeos/features/home/presentation/providers/home_providers.dart'
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_provider.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
+import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
+
+ProviderContainer _makeDbBackedContainer() {
+  final db = AppDatabase.forTesting(
+    DatabaseConnection(
+      NativeDatabase.memory(),
+      closeStreamsSynchronously: true,
+    ),
+  );
+  final container = ProviderContainer(
+    overrides: [databaseProvider.overrideWithValue(db)],
+  );
+  addTearDown(container.dispose);
+  addTearDown(db.close);
+  return container;
+}
 
 void main() {
   ProviderContainer makeContainer() {
@@ -20,7 +37,7 @@ void main() {
   }
 
   test(
-    'each still-mock-backed section AsyncNotifier resolves to its expected mock list',
+    'still-mock-backed section AsyncNotifiers resolve to their expected mock list',
     () async {
       final container = makeContainer();
 
@@ -29,10 +46,67 @@ void main() {
         kOverviewStats,
       );
       expect(await container.read(quickActionsProvider.future), kQuickActions);
-      expect(await container.read(upNextProvider.future), kUpNext);
-      expect(await container.read(timelineProvider.future), kTimeline);
     },
   );
+
+  test('upNextProvider is a thin watch of agendaEntriesProvider (Reminders + '
+      'Calendar merged) — no longer mock-backed as of Phase 7', () async {
+    final container = _makeDbBackedContainer();
+    final sub = container.listen(upNextProvider, (_, _) {});
+    addTearDown(sub.close);
+    // upNextProvider's first `.future` resolution reflects
+    // agendaEntriesProvider's state at listen-time, before either
+    // repository write below lands — awaiting the future again after
+    // each mutation re-reads the latest state once the merged Agenda
+    // stream re-emits (same "not autoDispose, so the initial build()
+    // snapshot doesn't itself re-await later mutations" reasoning as
+    // AsyncNotifier's documented pattern elsewhere in this file).
+    await container.read(upNextProvider.future);
+
+    await container
+        .read(remindersRepositoryProvider)
+        .create(
+          id: 'r1',
+          title: 'Pay rent',
+          dueAt: DateTime.now().add(const Duration(hours: 1)),
+          isUrgent: false,
+        );
+    await pumpEventQueue();
+    await container
+        .read(eventsRepositoryProvider)
+        .create(
+          id: 'e1',
+          title: 'Standup',
+          startAt: DateTime.now().add(const Duration(hours: 2)),
+          isAllDay: false,
+        );
+    await pumpEventQueue();
+
+    final items = container.read(upNextProvider).value!;
+    expect(items.map((i) => i.title), containsAll(['Pay rent', 'Standup']));
+  });
+
+  test('timelineProvider is a thin watch of agendaEntriesProvider', () async {
+    final container = _makeDbBackedContainer();
+    final sub = container.listen(timelineProvider, (_, _) {});
+    addTearDown(sub.close);
+    await container.read(timelineProvider.future);
+
+    await container
+        .read(eventsRepositoryProvider)
+        .create(
+          id: 'e1',
+          title: 'Conference',
+          startAt: DateTime.now(),
+          isAllDay: true,
+        );
+    await pumpEventQueue();
+
+    final steps = container.read(timelineProvider).value!;
+    expect(steps, hasLength(1));
+    expect(steps.single.label, 'Conference');
+    expect(steps.single.time, 'All day');
+  });
 
   test(
     'recentNotesProvider is a thin watch of notesDashboardProvider',
@@ -198,29 +272,75 @@ void main() {
   });
 
   test("UpNextNotifier.dismiss removes only the matching item's id", () async {
-    final container = makeContainer();
+    final container = _makeDbBackedContainer();
+    final sub = container.listen(upNextProvider, (_, _) {});
+    addTearDown(sub.close);
     await container.read(upNextProvider.future);
 
-    final target = kUpNext.first;
-    container.read(upNextProvider.notifier).dismiss(target.id);
+    await container
+        .read(remindersRepositoryProvider)
+        .create(
+          id: 'r1',
+          title: 'Pay rent',
+          dueAt: DateTime.now().add(const Duration(hours: 1)),
+          isUrgent: false,
+        );
+    await pumpEventQueue();
+    await container
+        .read(remindersRepositoryProvider)
+        .create(
+          id: 'r2',
+          title: 'Call mom',
+          dueAt: DateTime.now().add(const Duration(hours: 2)),
+          isUrgent: false,
+        );
+    await pumpEventQueue();
+
+    final before = container.read(upNextProvider).value!;
+    expect(before, hasLength(2));
+
+    container.read(upNextProvider.notifier).dismiss(before.first.id);
 
     final remaining = container.read(upNextProvider).value!;
-    expect(remaining.any((i) => i.id == target.id), isFalse);
-    expect(remaining.length, kUpNext.length - 1);
+    expect(remaining.any((i) => i.id == before.first.id), isFalse);
+    expect(remaining.length, 1);
   });
 
   test(
     "TimelineNotifier.dismiss removes only the matching step's id",
     () async {
-      final container = makeContainer();
+      final container = _makeDbBackedContainer();
+      final sub = container.listen(timelineProvider, (_, _) {});
+      addTearDown(sub.close);
       await container.read(timelineProvider.future);
 
-      final target = kTimeline.first;
-      container.read(timelineProvider.notifier).dismiss(target.id);
+      await container
+          .read(eventsRepositoryProvider)
+          .create(
+            id: 'e1',
+            title: 'Standup',
+            startAt: DateTime.now().add(const Duration(hours: 1)),
+            isAllDay: false,
+          );
+      await pumpEventQueue();
+      await container
+          .read(eventsRepositoryProvider)
+          .create(
+            id: 'e2',
+            title: 'Review',
+            startAt: DateTime.now().add(const Duration(hours: 2)),
+            isAllDay: false,
+          );
+      await pumpEventQueue();
+
+      final before = container.read(timelineProvider).value!;
+      expect(before, hasLength(2));
+
+      container.read(timelineProvider.notifier).dismiss(before.first.id);
 
       final remaining = container.read(timelineProvider).value!;
-      expect(remaining.any((s) => s.id == target.id), isFalse);
-      expect(remaining.length, kTimeline.length - 1);
+      expect(remaining.any((s) => s.id == before.first.id), isFalse);
+      expect(remaining.length, 1);
     },
   );
 }

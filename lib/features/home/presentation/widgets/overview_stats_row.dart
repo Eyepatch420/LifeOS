@@ -35,6 +35,7 @@ class OverviewStatsRow extends StatelessWidget {
         subtitle: stat.subtitle,
         progress: stat.progress,
         accentColor: accent,
+        onTap: stat.onTap,
       );
     }
 

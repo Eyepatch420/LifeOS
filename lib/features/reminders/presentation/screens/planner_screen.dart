@@ -12,13 +12,13 @@ import 'package:lifeos/features/reminders/presentation/providers/planner_day_dat
 import 'package:lifeos/features/reminders/presentation/providers/planner_selected_date_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_completion_feedback.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_date_strip.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_day_summary.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_header.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_timeline_item.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/feedback/section_loading_placeholder.dart';
+import 'package:lifeos/shared/widgets/planning/planner_date_strip.dart';
+import 'package:lifeos/shared/widgets/planning/planner_header.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
 /// `/reminders/planner` — a focused single-day planner view over the same
@@ -87,6 +87,10 @@ class _PlannerDayContent extends ConsumerWidget {
     WidgetRef ref,
     PlannerItem item,
   ) {
+    // `PlannerTimelineItem` never renders a complete action for an item
+    // with `canComplete: false` (Calendar events), but guard here too so
+    // this handler stays safe if ever reached another way.
+    if (!item.canComplete) return Future.value();
     return completePlannerItemWithFeedback(
       context,
       item: item,
@@ -131,12 +135,29 @@ class _PlannerDayContent extends ConsumerWidget {
             ),
           const SizedBox(height: AppSpacing.lg),
         ],
-        for (var i = 0; i < data.scheduled.length; i++)
+        if (data.allDayItems.isNotEmpty) ...[
+          Text(
+            'All Day',
+            style: context.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          for (var i = 0; i < data.allDayItems.length; i++)
+            PlannerTimelineItem(
+              item: data.allDayItems[i],
+              showConnector: i != data.allDayItems.length - 1,
+              onTap: () => _openDetail(context, data.allDayItems[i]),
+              onComplete: () => _complete(context, ref, data.allDayItems[i]),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        for (var i = 0; i < data.timedItems.length; i++)
           PlannerTimelineItem(
-            item: data.scheduled[i],
-            showConnector: i != data.scheduled.length - 1,
-            onTap: () => _openDetail(context, data.scheduled[i]),
-            onComplete: () => _complete(context, ref, data.scheduled[i]),
+            item: data.timedItems[i],
+            showConnector: i != data.timedItems.length - 1,
+            onTap: () => _openDetail(context, data.timedItems[i]),
+            onComplete: () => _complete(context, ref, data.timedItems[i]),
           ),
         const SizedBox(height: AppSpacing.lg),
         Center(

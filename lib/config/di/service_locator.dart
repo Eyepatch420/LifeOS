@@ -34,6 +34,11 @@ Future<void> setupServiceLocator() async {
         FlutterLocalNotificationsPlugin(),
       );
       await scheduler.initialize();
+      // Must run after `initialize()` (registers the tap callbacks) so a
+      // cold-start payload is forwarded through the same
+      // `notificationTapDispatcher` stream those callbacks use — see
+      // `LocalNotificationScheduler.consumeLaunchPayload`'s doc comment.
+      await scheduler.consumeLaunchPayload();
       return scheduler;
     })
     ..registerLazySingleton<SyncManager>(() => const NoopSyncManager())

@@ -7,17 +7,17 @@
 
 /                          StatefulShellRoute.indexedStack
   ├─ /home                 branch 0
-  ├─ /reminders            branch 1 — real (Reminders/Planner/Habits workspace, see below)
+  ├─ /reminders            branch 1 — real (Reminders/Planner/Habits/Calendar workspace, see below)
   ├─ /health               branch 2 (placeholder)
   ├─ /finance              branch 3 (placeholder)
   └─ /documents            branch 4 (placeholder)
 ```
 
-## Reminders branch (`/reminders`) — Reminders/Planner/Habits workspace
+## Reminders branch (`/reminders`) — Reminders/Planner/Habits/Calendar workspace
 
-Branch 1 hosts three fully functional `PlanningWorkspaceScaffold` sections
-(Reminders, Planner, Habits — Calendar remains a non-navigating
-workspace-nav placeholder). All child routes below are
+Branch 1 hosts four fully functional `PlanningWorkspaceScaffold` sections
+(Reminders, Planner, Habits, Calendar — the Phase 7 addition; no
+non-navigating placeholder remains). All child routes below are
 `parentNavigatorKey: _rootNavigatorKey` (root-navigator pushes) except the
 branch root itself:
 
@@ -29,16 +29,20 @@ branch root itself:
   /reminders/habits              HabitsDashboardScreen
   /reminders/habits/new          NewHabitScreen
   /reminders/habits/:habitId     HabitDetailScreen
+  /reminders/calendar            CalendarDashboardScreen
+  /reminders/calendar/new        NewEventScreen (optional initialDate via state.extra)
+  /reminders/calendar/:eventId   EventDetailScreen
   /reminders/:reminderId         ReminderDetailScreen
 ```
 
-Static children (`all`, `new`, `planner`, `habits`, `habits/new`) are
-declared before the dynamic `:reminderId` child in `app_router.dart`'s
-`routes:` list — go_router tries routes in declaration order, so e.g.
-`/reminders/habits` matches the static route first instead of being
-captured as `:reminderId` = `"habits"`. Within the Habits sub-tree,
-`habits/new` is likewise declared before `habits/:habitId` for the same
-reason.
+Static children (`all`, `new`, `planner`, `habits`, `habits/new`,
+`calendar`, `calendar/new`) are declared before the dynamic
+`:reminderId` child in `app_router.dart`'s `routes:` list — go_router
+tries routes in declaration order, so e.g. `/reminders/calendar` matches
+the static route first instead of being captured as `:reminderId` =
+`"calendar"`. Within the Habits/Calendar sub-trees, `habits/new`/
+`calendar/new` are likewise declared before `habits/:habitId`/
+`calendar/:eventId` for the same reason.
 
 ## Redirect logic
 

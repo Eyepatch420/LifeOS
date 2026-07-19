@@ -13,6 +13,10 @@ import 'package:lifeos/theme/workspace_theme.dart';
 /// responsive requirement) rather than forcing a 7-column row into a fixed
 /// width. Selection uses the workspace accent (see [theme]); today gets a
 /// secondary indicator dot when it isn't the selected day.
+///
+/// Lives under `shared/widgets/planning/` (moved here Phase 7, same reason
+/// as [PlannerHeader]'s doc comment) — the Calendar workspace's date strip
+/// needed the identical widget.
 class PlannerDateStrip extends StatelessWidget {
   const PlannerDateStrip({
     required this.selectedDate,

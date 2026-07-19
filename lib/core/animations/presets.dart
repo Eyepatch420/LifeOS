@@ -77,6 +77,14 @@ abstract final class AppMotionPresets {
     AppCurves.easeOutCubic,
   );
 
+  /// Focus session visual-stage crossfade (Lottie + background atmosphere
+  /// transitioning as session progress advances) — see
+  /// `AppDurations.focusStage`'s doc comment.
+  static const MotionPreset focusStage = MotionPreset(
+    AppDurations.focusStage,
+    AppCurves.easeOutCubic,
+  );
+
   /// Bottom sheet show/hide.
   static const MotionPreset bottomSheet = MotionPreset(
     AppDurations.slow,

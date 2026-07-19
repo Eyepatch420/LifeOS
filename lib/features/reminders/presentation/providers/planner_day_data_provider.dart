@@ -8,19 +8,28 @@ import 'package:lifeos/features/reminders/presentation/providers/planner_selecte
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_data_provider.dart';
 
 /// The flat, live [PlannerItem] projection Planner derives everything from
-/// — merges every registered [PlannerContributor] (Reminders, Habits as of
-/// Phase 6) via `plannerContributors`, the same composition-layer seam
-/// `agendaContributors`/`searchContributors`/`notificationContributors`
-/// use. `PlannerScreen`/[plannerDayDataProvider] never need to change when
-/// a new contributor is registered, since they only ever see
-/// `List<PlannerItem>`. `autoDispose` for the same reason as
+/// — merges every registered [PlannerContributor] (Reminders, Habits,
+/// Calendar as of Phase 7) via `plannerContributors`, the same
+/// composition-layer seam `agendaContributors`/`searchContributors`/
+/// `notificationContributors` use. `PlannerScreen`/[plannerDayDataProvider]
+/// never need to change when a new contributor is registered, since they
+/// only ever see `List<PlannerItem>`. `autoDispose` for the same reason as
 /// [remindersClockTickProvider] (see that provider's doc comment): avoids
 /// timers/streams outliving a test or an unmounted Planner screen.
+///
+/// Re-watches [plannerSelectedDateProvider] and passes it as each
+/// contributor's `anchor` (see [PlannerContributor.contributions]'s doc
+/// comment) — this provider re-subscribes to every contributor whenever the
+/// selected date changes, which is exactly what lets
+/// `HabitsPlannerContributor` re-center its materialization window on
+/// wherever the user actually navigated to (Phase 7's fix for the Phase 6
+/// ±30-day-from-today limitation).
 final _plannerItemsProvider = StreamProvider.autoDispose<List<PlannerItem>>((
   ref,
 ) {
   final contributors = ref.watch(plannerContributorsProvider);
-  final streams = [for (final c in contributors) c.contributions()];
+  final anchor = ref.watch(plannerSelectedDateProvider);
+  final streams = [for (final c in contributors) c.contributions(anchor)];
   if (streams.isEmpty) return Stream.value(const <PlannerItem>[]);
   return _mergeContributorStreams(streams);
 });

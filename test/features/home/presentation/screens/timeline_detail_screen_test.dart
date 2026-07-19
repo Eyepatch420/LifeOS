@@ -1,17 +1,49 @@
+import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lifeos/features/home/data/mock_dashboard_data.dart';
+import 'package:lifeos/config/di/core_providers.dart';
+import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/features/calendar/presentation/providers/calendar_dashboard_provider.dart';
 import 'package:lifeos/features/home/presentation/providers/home_providers.dart';
 import 'package:lifeos/features/home/presentation/screens/timeline_detail_screen.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 
+/// Timeline is now Agenda-backed (Phase 7) rather than mock-backed
+/// (`kTimeline`) — seeds a real Calendar event via `eventsRepositoryProvider`
+/// instead.
 void main() {
   testWidgets('renders the matching step by id', (tester) async {
-    final step = kTimeline.first;
+    final db = AppDatabase.forTesting(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
+    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(eventsRepositoryProvider)
+        .create(
+          id: 'e1',
+          title: 'Standup',
+          startAt: DateTime.now().add(const Duration(hours: 1)),
+          isAllDay: false,
+        );
+    final sub = container.listen(timelineProvider, (_, _) {});
+    addTearDown(sub.close);
+    final steps = await container.read(timelineProvider.future);
+    final step = steps.single;
+
     await tester.pumpWidget(
-      ProviderScope(
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp(home: TimelineDetailScreen(stepId: step.id)),
       ),
     );
@@ -24,8 +56,21 @@ void main() {
   });
 
   testWidgets('falls back to EmptyState for an unknown stepId', (tester) async {
+    final db = AppDatabase.forTesting(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
+    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+
     await tester.pumpWidget(
-      ProviderScope(
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp(
           home: TimelineDetailScreen(stepId: 'not-a-real-step'),
         ),
@@ -41,8 +86,30 @@ void main() {
   testWidgets('Remove from Timeline dismisses the step and pops', (
     tester,
   ) async {
-    final step = kTimeline.first;
-    late ProviderContainer container;
+    final db = AppDatabase.forTesting(
+      DatabaseConnection(
+        NativeDatabase.memory(),
+        closeStreamsSynchronously: true,
+      ),
+    );
+    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(eventsRepositoryProvider)
+        .create(
+          id: 'e1',
+          title: 'Standup',
+          startAt: DateTime.now().add(const Duration(hours: 1)),
+          isAllDay: false,
+        );
+    final sub = container.listen(timelineProvider, (_, _) {});
+    addTearDown(sub.close);
+    final steps = await container.read(timelineProvider.future);
+    final step = steps.single;
 
     final router = GoRouter(
       initialLocation: '/',
@@ -56,21 +123,12 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      ProviderScope(
-        child: Consumer(
-          builder: (context, ref, _) {
-            container = ProviderScope.containerOf(context);
-            return MaterialApp.router(routerConfig: router);
-          },
-        ),
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
     await tester.pump();
-
-    // See new_note_screen_test.dart for why this listener is held open —
-    // Riverpod 3.x defaults every provider to auto-dispose.
-    final sub = container.listen(timelineProvider, (_, _) {});
-    addTearDown(sub.close);
 
     router.push('/timeline/${step.id}');
     await tester.pumpAndSettle();

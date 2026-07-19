@@ -30,12 +30,27 @@ abstract interface class PlannerContributor {
 
   /// Live [PlannerItem]s this feature currently contributes, across all
   /// dates — day-filtering is [plannerDayFor]'s job, not the contributor's.
-  Stream<List<PlannerItem>> contributions();
+  ///
+  /// [anchor] is the date Planner is currently showing (see
+  /// `plannerSelectedDateProvider`). Contributors backed by real persisted
+  /// rows (Reminders, Calendar Events) can ignore it entirely — every row
+  /// is already a real item regardless of date. It exists for contributors
+  /// that must *materialize* items on the fly because an "occurrence" isn't
+  /// itself a stored row (Habits: a habit occurrence only exists
+  /// conceptually on days its schedule says yes — see
+  /// `HabitsPlannerContributor`), so they can center their materialization
+  /// window on whatever date the user is actually viewing instead of a
+  /// fixed window around "today" that silently stops covering the Planner
+  /// once the user navigates far enough away (the Phase 6 limitation this
+  /// parameter replaces — see `docs/future_work.md`'s prior entry on it).
+  Stream<List<PlannerItem>> contributions(DateTime anchor);
 
   /// Completes (or un-completes) the occurrence [item] represents, using
   /// whatever semantics the owning feature defines for "complete" — a
   /// contributor only ever receives back a [PlannerItem] it itself
   /// produced (matched by [PlannerItem.sourceType]), so it's safe to assume
-  /// [item.sourceId] is one of its own entity ids.
+  /// [item.sourceId] is one of its own entity ids. Never called for an item
+  /// with [PlannerItem.canComplete] false (Calendar Events) — `PlannerScreen`
+  /// doesn't render a complete action for those at all.
   Future<void> complete(PlannerItem item, {required bool completed});
 }

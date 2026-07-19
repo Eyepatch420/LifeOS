@@ -16,8 +16,8 @@ import 'package:lifeos/theme/theme_providers.dart';
 /// highlight in [RemindersWorkspaceNav] and which item is navigation-target
 /// vs. currently-selected (see [RemindersWorkspaceNavItem.onSelected]'s doc
 /// comment: an item with no `onSelected` renders as a non-navigating
-/// placeholder, which is intentional for Habits/Calendar in Phase 5).
-enum PlanningWorkspaceSection { reminders, planner, habits }
+/// placeholder).
+enum PlanningWorkspaceSection { reminders, planner, habits, calendar }
 
 /// Shared shell for every screen that belongs to the orange
 /// Reminders/Planner planning workspace: hero (sunset SVG, greeting,
@@ -74,15 +74,19 @@ class PlanningWorkspaceScaffold extends ConsumerWidget {
             ? null
             : () => context.pushNamed(RouteNames.habits),
       ),
-      const RemindersWorkspaceNavItem(
+      RemindersWorkspaceNavItem(
         label: 'Calendar',
         icon: Icons.calendar_today_outlined,
+        onSelected: activeSection == PlanningWorkspaceSection.calendar
+            ? null
+            : () => context.pushNamed(RouteNames.calendar),
       ),
     ];
     final selectedIndex = switch (activeSection) {
       PlanningWorkspaceSection.reminders => 0,
       PlanningWorkspaceSection.planner => 1,
       PlanningWorkspaceSection.habits => 2,
+      PlanningWorkspaceSection.calendar => 3,
     };
 
     return FloatingPageLayout(

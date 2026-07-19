@@ -45,11 +45,18 @@ class ScheduleNotification extends NotificationIntent {
     required this.when,
     required this.title,
     required this.body,
+    this.payload,
   });
 
   final DateTime when;
   final String title;
   final String body;
+
+  /// Opaque string handed back verbatim on notification tap (see
+  /// `NotificationScheduler.scheduleAt` / `notification_tap_dispatcher.dart`)
+  /// so a tap can be routed to a specific destination. `null` for
+  /// contributors with nothing to deep-link to (a tap just opens the app).
+  final String? payload;
 }
 
 class CancelNotification extends NotificationIntent {

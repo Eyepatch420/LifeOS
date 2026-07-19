@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/animations/page_transitions.dart';
+import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
+import 'package:lifeos/features/calendar/presentation/screens/event_detail_screen.dart';
+import 'package:lifeos/features/calendar/presentation/screens/new_event_screen.dart';
 import 'package:lifeos/features/documents/presentation/screens/documents_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/finance_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/new_expense_screen.dart';
+import 'package:lifeos/features/focus/presentation/screens/focus_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
@@ -203,6 +207,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   GoRoute(
+                    path: RoutePaths.focus,
+                    name: RouteNames.focus,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const FocusScreen(),
+                    ),
+                  ),
+                  GoRoute(
                     path: RoutePaths.listDetail,
                     name: RouteNames.listDetail,
                     parentNavigatorKey: _rootNavigatorKey,
@@ -286,6 +299,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       key: state.pageKey,
                       child: HabitDetailScreen(
                         habitId: state.pathParameters['habitId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.calendar,
+                    name: RouteNames.calendar,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const CalendarDashboardScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newEvent,
+                    name: RouteNames.newEvent,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: NewEventScreen(
+                        initialDate: state.extra is DateTime
+                            ? state.extra! as DateTime
+                            : null,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.eventDetail,
+                    name: RouteNames.eventDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: EventDetailScreen(
+                        eventId: state.pathParameters['eventId']!,
                       ),
                     ),
                   ),

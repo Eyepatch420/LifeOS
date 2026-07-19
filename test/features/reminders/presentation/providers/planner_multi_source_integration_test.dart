@@ -4,6 +4,8 @@ import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/core/events/event_bus.dart';
 import 'package:lifeos/core/planner/planner_item.dart';
 import 'package:lifeos/core/utils/date_only.dart';
+import 'package:lifeos/features/calendar/data/repositories/events_repository.dart';
+import 'package:lifeos/features/calendar/presentation/providers/calendar_planner_contributor.dart';
 import 'package:lifeos/features/habits/data/repositories/habits_repository.dart';
 import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_planner_contributor.dart';
@@ -11,21 +13,23 @@ import 'package:lifeos/features/reminders/data/repositories/reminders_repository
 import 'package:lifeos/features/reminders/presentation/providers/reminders_planner_contributor.dart';
 
 /// Verifies Planner's cross-feature aggregation architecture — the primary
-/// architectural goal of Phase 6: a second real Type A feature (Habits)
-/// contributes to the same `List<PlannerItem>` stream Reminders already
-/// did, via the [PlannerContributor] interface, with no feature-specific
-/// switching inside Planner's own provider/screen code.
+/// architectural goal of Phase 6/7: real Type A features (Habits, then
+/// Calendar) contribute to the same `List<PlannerItem>` stream Reminders
+/// already did, via the [PlannerContributor] interface, with no
+/// feature-specific switching inside Planner's own provider/screen code.
 void main() {
   late AppDatabase db;
   late EventBus eventBus;
   late RemindersRepository remindersRepository;
   late HabitsRepository habitsRepository;
+  late EventsRepository eventsRepository;
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     eventBus = EventBus();
     remindersRepository = RemindersRepository(db.remindersDao, eventBus);
     habitsRepository = HabitsRepository(db.habitsDao, eventBus);
+    eventsRepository = EventsRepository(db.eventsDao, eventBus);
   });
 
   tearDown(() async {
@@ -52,8 +56,12 @@ void main() {
     );
     final habitsContributor = HabitsPlannerContributor(habitsRepository);
 
-    final reminderItems = await remindersContributor.contributions().first;
-    final habitItems = await habitsContributor.contributions().first;
+    final reminderItems = await remindersContributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
+    final habitItems = await habitsContributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
 
     expect(reminderItems, hasLength(1));
     expect(reminderItems.single.sourceType, PlannerSourceType.reminder);
@@ -81,7 +89,9 @@ void main() {
       );
 
       final contributor = HabitsPlannerContributor(habitsRepository);
-      final items = await contributor.contributions().first;
+      final items = await contributor
+          .contributions(dateOnly(DateTime.now()))
+          .first;
 
       final todaysItems = items.where((i) => isSameDay(i.scheduledAt, today));
       expect(todaysItems, isEmpty);
@@ -100,14 +110,18 @@ void main() {
 
     final contributor = HabitsPlannerContributor(habitsRepository);
     final today = dateOnly(DateTime.now());
-    final items = await contributor.contributions().first;
+    final items = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
     final todayItem = items.firstWhere((i) => isSameDay(i.scheduledAt, today));
 
     expect(todayItem.isCompleted, isFalse);
 
     await contributor.complete(todayItem, completed: true);
 
-    final refreshed = await contributor.contributions().first;
+    final refreshed = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
     final refreshedToday = refreshed.firstWhere(
       (i) => isSameDay(i.scheduledAt, today),
     );
@@ -125,7 +139,9 @@ void main() {
       );
 
       final contributor = RemindersPlannerContributor(remindersRepository);
-      final items = await contributor.contributions().first;
+      final items = await contributor
+          .contributions(dateOnly(DateTime.now()))
+          .first;
 
       await contributor.complete(items.single, completed: true);
 
@@ -152,10 +168,10 @@ void main() {
 
       final reminderItem = (await RemindersPlannerContributor(
         remindersRepository,
-      ).contributions().first).single;
+      ).contributions(dateOnly(DateTime.now())).first).single;
       final habitItem = (await HabitsPlannerContributor(
         habitsRepository,
-      ).contributions().first).first;
+      ).contributions(dateOnly(DateTime.now())).first).first;
 
       expect(reminderItem.routeName, 'reminderDetail');
       expect(reminderItem.pathParameters, {'reminderId': 'r1'});
@@ -187,7 +203,9 @@ void main() {
     );
 
     final contributor = HabitsPlannerContributor(habitsRepository);
-    final items = await contributor.contributions().first;
+    final items = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
     final today = dateOnly(DateTime.now());
 
     final pastIncomplete = items.where(
@@ -214,12 +232,121 @@ void main() {
     );
 
     final contributor = HabitsPlannerContributor(habitsRepository);
-    final items = await contributor.contributions().first;
+    final items = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
 
     final yesterdayItem = items.where(
       (i) => isSameDay(i.scheduledAt, yesterday),
     );
     expect(yesterdayItem, hasLength(1));
     expect(yesterdayItem.single.isCompleted, isTrue);
+  });
+
+  test('a habit more than 30 days from "today" still appears once the Planner '
+      'anchor navigates to that date — the Phase 7 fix for the Phase 6 '
+      'fixed-window-around-today limitation', () async {
+    await habitsRepository.create(
+      id: 'h1',
+      title: 'Far Future Habit',
+      schedule: const HabitSchedule.daily(),
+      icon: 'star',
+    );
+
+    final farFuture = dateOnly(DateTime.now().add(const Duration(days: 60)));
+    final contributor = HabitsPlannerContributor(habitsRepository);
+
+    // Anchored on "today" (the Phase 6 default), the far-future day falls
+    // outside the ±30-day window.
+    final itemsFromToday = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
+    expect(
+      itemsFromToday.any((i) => isSameDay(i.scheduledAt, farFuture)),
+      isFalse,
+    );
+
+    // Anchored on the far-future day itself (as Planner would once the
+    // user navigates there), the window re-centers and the occurrence
+    // appears.
+    final itemsFromFarFuture = await contributor.contributions(farFuture).first;
+    expect(
+      itemsFromFarFuture.any((i) => isSameDay(i.scheduledAt, farFuture)),
+      isTrue,
+    );
+  });
+
+  test('a timed event and an all-day event both contribute PlannerItems with '
+      'the correct temporalKind, and neither is completable', () async {
+    final today = DateTime.now();
+    await eventsRepository.create(
+      id: 'e1',
+      title: 'Standup',
+      startAt: DateTime(today.year, today.month, today.day, 9),
+      isAllDay: false,
+    );
+    await eventsRepository.create(
+      id: 'e2',
+      title: 'Conference',
+      startAt: today,
+      isAllDay: true,
+    );
+
+    final contributor = CalendarPlannerContributor(eventsRepository);
+    final items = await contributor
+        .contributions(dateOnly(DateTime.now()))
+        .first;
+
+    expect(items, hasLength(2));
+    final timed = items.firstWhere((i) => i.title == 'Standup');
+    final allDay = items.firstWhere((i) => i.title == 'Conference');
+
+    expect(timed.temporalKind, PlannerTemporalKind.timed);
+    expect(allDay.temporalKind, PlannerTemporalKind.allDay);
+    expect(timed.canComplete, isFalse);
+    expect(allDay.canComplete, isFalse);
+    expect(timed.sourceType, PlannerSourceType.event);
+    expect(timed.routeName, 'eventDetail');
+    expect(timed.pathParameters, {'eventId': 'e1'});
+  });
+
+  test('all three source types (reminder, habit, event) can appear in the '
+      'same merged item list with distinct sourceTypes', () async {
+    await remindersRepository.create(
+      id: 'r1',
+      title: 'Reminder',
+      dueAt: DateTime.now(),
+      isUrgent: false,
+    );
+    await habitsRepository.create(
+      id: 'h1',
+      title: 'Habit',
+      schedule: const HabitSchedule.daily(),
+      icon: 'star',
+    );
+    await eventsRepository.create(
+      id: 'e1',
+      title: 'Event',
+      startAt: DateTime.now(),
+      isAllDay: false,
+    );
+
+    final today = dateOnly(DateTime.now());
+    final contributors = [
+      RemindersPlannerContributor(remindersRepository),
+      HabitsPlannerContributor(habitsRepository),
+      CalendarPlannerContributor(eventsRepository),
+    ];
+    final merged = <PlannerItem>[];
+    for (final contributor in contributors) {
+      merged.addAll(await contributor.contributions(today).first);
+    }
+
+    final sourceTypes = merged.map((i) => i.sourceType).toSet();
+    expect(sourceTypes, {
+      PlannerSourceType.reminder,
+      PlannerSourceType.habit,
+      PlannerSourceType.event,
+    });
   });
 }

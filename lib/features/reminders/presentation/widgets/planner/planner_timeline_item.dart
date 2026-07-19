@@ -34,10 +34,13 @@ class PlannerTimelineItem extends StatelessWidget {
     final visualState = visualStateFor(item);
     final accent = _accentFor(context, visualState);
 
+    final isAllDay = item.temporalKind == PlannerTemporalKind.allDay;
+
     return Semantics(
       button: true,
       label:
-          '${item.title}, ${DateFormat('h:mm a').format(item.scheduledAt)}'
+          '${item.title}'
+          '${isAllDay ? ', all day' : ', ${DateFormat('h:mm a').format(item.scheduledAt)}'}'
           '${item.isCompleted ? ', completed' : ''}'
           '${item.isUrgent ? ', urgent' : ''}'
           '${item.isRecurring ? ', recurring' : ''}',
@@ -51,12 +54,14 @@ class PlannerTimelineItem extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 56,
-                  child: Text(
-                    DateFormat('h:mm a').format(item.scheduledAt),
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  child: isAllDay
+                      ? null
+                      : Text(
+                          DateFormat('h:mm a').format(item.scheduledAt),
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                 ),
                 Column(
                   children: [
@@ -116,7 +121,7 @@ class PlannerTimelineItem extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (!item.isCompleted)
+                        if (item.canComplete && !item.isCompleted)
                           Semantics(
                             button: true,
                             label: 'Mark ${item.title} as completed',

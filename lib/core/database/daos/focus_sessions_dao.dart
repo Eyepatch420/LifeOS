@@ -15,20 +15,25 @@ class FocusSessionsDao extends DatabaseAccessor<AppDatabase>
     )..orderBy([(t) => OrderingTerm.desc(t.startedAt)])).watch();
   }
 
-  /// The in-progress session (`endedAt` still null), if any. There should
-  /// only ever be at most one — enforced at the repository layer.
+  /// The in-progress session (`status` `running` or `paused`), if any.
+  /// There should only ever be at most one — enforced at the repository
+  /// layer.
   Stream<FocusSession?> watchActive() {
     return (select(
       focusSessions,
-    )..where((t) => t.endedAt.isNull())).watchSingleOrNull();
+    )..where((t) => t.status.isIn(['running', 'paused']))).watchSingleOrNull();
+  }
+
+  Future<FocusSession?> getById(String id) {
+    return (select(
+      focusSessions,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
   Future<void> upsert(FocusSessionsCompanion entry) =>
       into(focusSessions).insertOnConflictUpdate(entry);
 
-  Future<void> end(String id, DateTime endedAt) {
-    return (update(focusSessions)..where((t) => t.id.equals(id))).write(
-      FocusSessionsCompanion(endedAt: Value(endedAt)),
-    );
+  Future<void> updateFields(String id, FocusSessionsCompanion entry) {
+    return (update(focusSessions)..where((t) => t.id.equals(id))).write(entry);
   }
 }

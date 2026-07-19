@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:lifeos/core/database/daos/events_dao.dart';
 import 'package:lifeos/core/database/daos/expenses_dao.dart';
 import 'package:lifeos/core/database/daos/focus_sessions_dao.dart';
 import 'package:lifeos/core/database/daos/habits_dao.dart';
@@ -8,6 +9,7 @@ import 'package:lifeos/core/database/daos/notes_dao.dart';
 import 'package:lifeos/core/database/daos/notifications_dao.dart';
 import 'package:lifeos/core/database/daos/reminders_dao.dart';
 import 'package:lifeos/core/database/database_connection.dart';
+import 'package:lifeos/core/database/tables/events_table.dart';
 import 'package:lifeos/core/database/tables/expenses_table.dart';
 import 'package:lifeos/core/database/tables/focus_sessions_table.dart';
 import 'package:lifeos/core/database/tables/habits_table.dart';
@@ -44,6 +46,7 @@ class AppMetadata extends Table {
     MoodEntries,
     Notifications,
     FocusSessions,
+    Events,
   ],
   daos: [
     NotesDao,
@@ -54,6 +57,7 @@ class AppMetadata extends Table {
     MoodEntriesDao,
     NotificationsDao,
     FocusSessionsDao,
+    EventsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -70,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -79,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(notes);
         // `reminders` is created here using its *current* column set
-        // (via the live `Reminders` table class), so a v1→v3 upgrade
+        // (via the live `Reminders` table class), so a v1→v4 upgrade
         // already gets `recurrence`/`customRule` for free — the `from < 3`
         // branch below only needs to run for a v2→v3 upgrade, never
         // stacked on top of this branch.
@@ -92,9 +96,29 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(moodEntries);
         await m.createTable(notifications);
         await m.createTable(focusSessions);
-      } else if (from < 3) {
-        await m.addColumn(reminders, reminders.recurrence);
-        await m.addColumn(reminders, reminders.customRule);
+        await m.createTable(events);
+      } else {
+        if (from < 3) {
+          await m.addColumn(reminders, reminders.recurrence);
+          await m.addColumn(reminders, reminders.customRule);
+        }
+        if (from < 4) {
+          await m.createTable(events);
+        }
+        if (from < 5) {
+          await m.addColumn(focusSessions, focusSessions.status);
+          await m.addColumn(focusSessions, focusSessions.pausedAt);
+          await m.addColumn(focusSessions, focusSessions.accumulatedPausedMs);
+          // Pre-migration rows predate `status` and were always either
+          // fully ended or (in practice) never left running by the old
+          // no-op FocusRepository-less scaffold — backfill deterministically
+          // from `endedAt` rather than leaving the column default
+          // ('running') on rows that are actually long since completed.
+          await customStatement(
+            "UPDATE focus_sessions SET status = 'completed' "
+            'WHERE ended_at IS NOT NULL',
+          );
+        }
       }
     },
     beforeOpen: (details) async {

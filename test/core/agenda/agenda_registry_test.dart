@@ -6,7 +6,12 @@ import 'package:lifeos/core/agenda/agenda_contributor.dart';
 import 'package:lifeos/core/agenda/agenda_entry.dart';
 import 'package:lifeos/core/agenda/agenda_registry.dart';
 
-AgendaEntry _entry(String id, DateTime time, {String sourceModule = 'test'}) {
+AgendaEntry _entry(
+  String id,
+  DateTime time, {
+  String sourceModule = 'test',
+  bool isAllDay = false,
+}) {
   return AgendaEntry(
     id: id,
     sourceModule: sourceModule,
@@ -16,6 +21,7 @@ AgendaEntry _entry(String id, DateTime time, {String sourceModule = 'test'}) {
     time: time,
     dotColor: Colors.blue,
     isUrgent: false,
+    isAllDay: isAllDay,
   );
 }
 
@@ -83,6 +89,24 @@ void main() {
 
     expect(results.last.map((e) => e.id), ['a2', 'a', 'b']);
     await sub.cancel();
+  });
+
+  test('all-day entries sort ahead of timed entries on the same day, '
+      'regardless of raw time value', () async {
+    // The all-day entry's `time` is midnight (earliest possible), so a
+    // naive time-only sort would already put it first here — use a
+    // LATER raw `time` to prove the sort genuinely checks `isAllDay`
+    // first, not just falling out of `time.compareTo` by coincidence.
+    final allDay = _entry('allday', DateTime(2026, 1, 1, 23), isAllDay: true);
+    final timed = _entry('timed', DateTime(2026, 1, 1, 9));
+    final registry = AgendaRegistry([
+      _FakeContributor([timed]),
+      _FakeContributor([allDay]),
+    ]);
+
+    final result = await registry.watchAll().first;
+
+    expect(result.map((e) => e.id), ['allday', 'timed']);
   });
 
   test(

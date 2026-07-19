@@ -17,11 +17,19 @@ import 'package:lifeos/theme/workspace_theme.dart';
 /// Purely presentational, same "props in, no provider reads" contract as
 /// `HomeHeroSection`.
 ///
-/// Measures the search/notification/avatar row's on-screen bounds after
-/// every layout and reports them via [onControlsRegionMeasured] so
-/// `HeroScaffold` can keep its scroll view from swallowing taps meant for
-/// these buttons — identical contract to `HomeHeroSection`, see
-/// `hero_scaffold.dart`'s [HeroControlsRegionReporter] doc comment.
+/// Measures the on-screen bounds of every genuinely interactive part of the
+/// hero — the search/notification/avatar row THROUGH [RemindersWorkspaceNav]
+/// — after every layout, and reports the union via [onControlsRegionMeasured]
+/// so `HeroScaffold` can keep its scroll view from swallowing taps/drags
+/// meant for them. This is a wider region than `HomeHeroSection` reports
+/// (which only ever needs the top controls row: its own second row,
+/// `MotivationalBanner`, has no wired `onTap` in any current call site — see
+/// `docs/future_work.md`'s "Motivational banner tap destination" entry) —
+/// `RemindersWorkspaceNav` is unconditionally interactive with real
+/// navigation callbacks, so leaving it out of the measured/excluded region
+/// silently swallows every pill tap/swipe. See
+/// `hero_scaffold.dart`'s [HeroControlsRegionReporter] doc comment for the
+/// underlying mechanism.
 class RemindersHeroSection extends StatefulWidget {
   const RemindersHeroSection({
     required this.greeting,
@@ -114,78 +122,101 @@ class _RemindersHeroSectionState extends State<RemindersHeroSection> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      // `_controlsRowKey` is measured on the OUTER Column
+                      // (spanning the search/notification/avatar row through
+                      // the workspace nav), not just the top row alone — see
+                      // this widget's class doc comment. Unlike
+                      // `HomeHeroSection`, whose only interactive row IS its
+                      // measured `_controlsRowKey` row (the row below it,
+                      // `MotivationalBanner`, has never actually been wired
+                      // to a real `onTap` — see `onBannerTap`'s doc comment
+                      // in `future_work.md`), `RemindersWorkspaceNav` below
+                      // is unconditionally interactive with real navigation
+                      // callbacks from the moment this scaffold exists. A
+                      // measured rect covering only the top row left the nav
+                      // row's taps/drags unreported to `HeroScaffold`, so
+                      // `RectExcludingPointer` never carved it out of the
+                      // full-bleed scroll view sitting on top of it in the
+                      // `Stack` — every tap/swipe on a workspace pill was
+                      // silently swallowed by the scroll view instead of
+                      // reaching the pill underneath.
+                      Column(
                         key: _controlsRowKey,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${widget.greeting},',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                  ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${widget.greeting},',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      widget.userName.isNotEmpty
+                                          ? widget.userName
+                                          : 'there',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  widget.userName.isNotEmpty
-                                      ? widget.userName
-                                      : 'there',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _HeroIconButton(
-                            icon: Icons.search,
-                            semanticsLabel: 'Search',
-                            onTap: widget.onSearchTap,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          _HeroIconButton(
-                            icon: Icons.notifications_outlined,
-                            semanticsLabel: 'Notifications',
-                            onTap: widget.onNotificationsTap,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          _HeroAvatar(onTap: widget.onAvatarTap),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            color: Colors.white70,
-                            size: 16,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Flexible(
-                            child: Text(
-                              widget.dateLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
                               ),
-                            ),
+                              _HeroIconButton(
+                                icon: Icons.search,
+                                semanticsLabel: 'Search',
+                                onTap: widget.onSearchTap,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              _HeroIconButton(
+                                icon: Icons.notifications_outlined,
+                                semanticsLabel: 'Notifications',
+                                onTap: widget.onNotificationsTap,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              _HeroAvatar(onTap: widget.onAvatarTap),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                color: Colors.white70,
+                                size: 16,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  widget.dateLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          RemindersWorkspaceNav(
+                            theme: widget.theme,
+                            items:
+                                widget.navItems ??
+                                RemindersWorkspaceNav.defaultItems,
+                            selectedIndex: widget.navSelectedIndex,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      RemindersWorkspaceNav(
-                        theme: widget.theme,
-                        items:
-                            widget.navItems ??
-                            RemindersWorkspaceNav.defaultItems,
-                        selectedIndex: widget.navSelectedIndex,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
                     ],

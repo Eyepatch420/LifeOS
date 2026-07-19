@@ -3,8 +3,14 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'dashboard_card_data.freezed.dart';
 
-/// One of the 4 overview stat cards (Reminders, Today's Plan, Wellness
-/// Score, Spent Today).
+/// One of the 4 overview stat cards (Tasks, Habits, Focus, Mood).
+///
+/// [onTap] is optional — a card with no real destination (Tasks/Habits/Mood
+/// as of Phase 8) stays inert, matching every existing call site; only
+/// Focus's card supplies one. `VoidCallback` isn't `@freezed`-comparable in
+/// a meaningful way (function identity), but `OverviewStat` has never been
+/// compared for equality anywhere in this codebase — it's read-only display
+/// data.
 @freezed
 abstract class OverviewStat with _$OverviewStat {
   const factory OverviewStat({
@@ -13,6 +19,7 @@ abstract class OverviewStat with _$OverviewStat {
     required String value,
     required String subtitle,
     required double progress,
+    VoidCallback? onTap,
   }) = _OverviewStat;
 }
 

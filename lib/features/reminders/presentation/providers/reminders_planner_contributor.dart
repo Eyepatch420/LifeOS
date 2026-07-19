@@ -20,7 +20,10 @@ class RemindersPlannerContributor implements PlannerContributor {
   PlannerSourceType get sourceType => PlannerSourceType.reminder;
 
   @override
-  Stream<List<PlannerItem>> contributions() {
+  Stream<List<PlannerItem>> contributions(DateTime anchor) {
+    // Every reminder is already a real stored row — no on-the-fly
+    // materialization needed, so `anchor` (only relevant to contributors
+    // that synthesize occurrences, e.g. Habits) is unused here.
     return _repository.watchAll().map(
       (reminders) => reminders.map(_toPlannerItem).toList(),
     );

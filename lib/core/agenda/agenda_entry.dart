@@ -13,6 +13,13 @@ part 'agenda_entry.freezed.dart';
 /// [sourceModule]/[sourceId] let [AgendaRegistry] route a `dismiss(id)` call
 /// back to the contributor that owns the entry, without the registry (or
 /// Home) ever importing that feature's repository directly.
+///
+/// [isAllDay] was added in Phase 7 once Calendar Events became a second
+/// Agenda contributor: an all-day event has no meaningful clock [time], so
+/// this flag lets [AgendaRegistry.watchAll]'s sort put all-day entries
+/// first for their day rather than the registry (or Home) fabricating a
+/// misleading midnight sort position for one — defaults to `false` so
+/// every existing contributor (Reminders) is unaffected.
 @freezed
 abstract class AgendaEntry with _$AgendaEntry {
   const factory AgendaEntry({
@@ -24,5 +31,6 @@ abstract class AgendaEntry with _$AgendaEntry {
     required DateTime time,
     required Color dotColor,
     required bool isUrgent,
+    @Default(false) bool isAllDay,
   }) = _AgendaEntry;
 }

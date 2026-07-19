@@ -4140,6 +4140,38 @@ class $FocusSessionsTable extends FocusSessions
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('running'),
+  );
+  static const VerificationMeta _pausedAtMeta = const VerificationMeta(
+    'pausedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> pausedAt = GeneratedColumn<DateTime>(
+    'paused_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accumulatedPausedMsMeta =
+      const VerificationMeta('accumulatedPausedMs');
+  @override
+  late final GeneratedColumn<int> accumulatedPausedMs = GeneratedColumn<int>(
+    'accumulated_paused_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4147,6 +4179,9 @@ class $FocusSessionsTable extends FocusSessions
     endedAt,
     plannedMinutes,
     kind,
+    status,
+    pausedAt,
+    accumulatedPausedMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4198,6 +4233,27 @@ class $FocusSessionsTable extends FocusSessions
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('paused_at')) {
+      context.handle(
+        _pausedAtMeta,
+        pausedAt.isAcceptableOrUnknown(data['paused_at']!, _pausedAtMeta),
+      );
+    }
+    if (data.containsKey('accumulated_paused_ms')) {
+      context.handle(
+        _accumulatedPausedMsMeta,
+        accumulatedPausedMs.isAcceptableOrUnknown(
+          data['accumulated_paused_ms']!,
+          _accumulatedPausedMsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -4227,6 +4283,18 @@ class $FocusSessionsTable extends FocusSessions
         DriftSqlType.string,
         data['${effectivePrefix}kind'],
       )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      pausedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}paused_at'],
+      ),
+      accumulatedPausedMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}accumulated_paused_ms'],
+      )!,
     );
   }
 
@@ -4242,12 +4310,18 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
   final DateTime? endedAt;
   final int plannedMinutes;
   final String kind;
+  final String status;
+  final DateTime? pausedAt;
+  final int accumulatedPausedMs;
   const FocusSession({
     required this.id,
     required this.startedAt,
     this.endedAt,
     required this.plannedMinutes,
     required this.kind,
+    required this.status,
+    this.pausedAt,
+    required this.accumulatedPausedMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4259,6 +4333,11 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
     }
     map['planned_minutes'] = Variable<int>(plannedMinutes);
     map['kind'] = Variable<String>(kind);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || pausedAt != null) {
+      map['paused_at'] = Variable<DateTime>(pausedAt);
+    }
+    map['accumulated_paused_ms'] = Variable<int>(accumulatedPausedMs);
     return map;
   }
 
@@ -4271,6 +4350,11 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
           : Value(endedAt),
       plannedMinutes: Value(plannedMinutes),
       kind: Value(kind),
+      status: Value(status),
+      pausedAt: pausedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pausedAt),
+      accumulatedPausedMs: Value(accumulatedPausedMs),
     );
   }
 
@@ -4285,6 +4369,11 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
       endedAt: serializer.fromJson<DateTime?>(json['endedAt']),
       plannedMinutes: serializer.fromJson<int>(json['plannedMinutes']),
       kind: serializer.fromJson<String>(json['kind']),
+      status: serializer.fromJson<String>(json['status']),
+      pausedAt: serializer.fromJson<DateTime?>(json['pausedAt']),
+      accumulatedPausedMs: serializer.fromJson<int>(
+        json['accumulatedPausedMs'],
+      ),
     );
   }
   @override
@@ -4296,6 +4385,9 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
       'endedAt': serializer.toJson<DateTime?>(endedAt),
       'plannedMinutes': serializer.toJson<int>(plannedMinutes),
       'kind': serializer.toJson<String>(kind),
+      'status': serializer.toJson<String>(status),
+      'pausedAt': serializer.toJson<DateTime?>(pausedAt),
+      'accumulatedPausedMs': serializer.toJson<int>(accumulatedPausedMs),
     };
   }
 
@@ -4305,12 +4397,18 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
     Value<DateTime?> endedAt = const Value.absent(),
     int? plannedMinutes,
     String? kind,
+    String? status,
+    Value<DateTime?> pausedAt = const Value.absent(),
+    int? accumulatedPausedMs,
   }) => FocusSession(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
     endedAt: endedAt.present ? endedAt.value : this.endedAt,
     plannedMinutes: plannedMinutes ?? this.plannedMinutes,
     kind: kind ?? this.kind,
+    status: status ?? this.status,
+    pausedAt: pausedAt.present ? pausedAt.value : this.pausedAt,
+    accumulatedPausedMs: accumulatedPausedMs ?? this.accumulatedPausedMs,
   );
   FocusSession copyWithCompanion(FocusSessionsCompanion data) {
     return FocusSession(
@@ -4321,6 +4419,11 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
           ? data.plannedMinutes.value
           : this.plannedMinutes,
       kind: data.kind.present ? data.kind.value : this.kind,
+      status: data.status.present ? data.status.value : this.status,
+      pausedAt: data.pausedAt.present ? data.pausedAt.value : this.pausedAt,
+      accumulatedPausedMs: data.accumulatedPausedMs.present
+          ? data.accumulatedPausedMs.value
+          : this.accumulatedPausedMs,
     );
   }
 
@@ -4331,13 +4434,25 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
           ..write('startedAt: $startedAt, ')
           ..write('endedAt: $endedAt, ')
           ..write('plannedMinutes: $plannedMinutes, ')
-          ..write('kind: $kind')
+          ..write('kind: $kind, ')
+          ..write('status: $status, ')
+          ..write('pausedAt: $pausedAt, ')
+          ..write('accumulatedPausedMs: $accumulatedPausedMs')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, startedAt, endedAt, plannedMinutes, kind);
+  int get hashCode => Object.hash(
+    id,
+    startedAt,
+    endedAt,
+    plannedMinutes,
+    kind,
+    status,
+    pausedAt,
+    accumulatedPausedMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4346,7 +4461,10 @@ class FocusSession extends DataClass implements Insertable<FocusSession> {
           other.startedAt == this.startedAt &&
           other.endedAt == this.endedAt &&
           other.plannedMinutes == this.plannedMinutes &&
-          other.kind == this.kind);
+          other.kind == this.kind &&
+          other.status == this.status &&
+          other.pausedAt == this.pausedAt &&
+          other.accumulatedPausedMs == this.accumulatedPausedMs);
 }
 
 class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
@@ -4355,6 +4473,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
   final Value<DateTime?> endedAt;
   final Value<int> plannedMinutes;
   final Value<String> kind;
+  final Value<String> status;
+  final Value<DateTime?> pausedAt;
+  final Value<int> accumulatedPausedMs;
   final Value<int> rowid;
   const FocusSessionsCompanion({
     this.id = const Value.absent(),
@@ -4362,6 +4483,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
     this.endedAt = const Value.absent(),
     this.plannedMinutes = const Value.absent(),
     this.kind = const Value.absent(),
+    this.status = const Value.absent(),
+    this.pausedAt = const Value.absent(),
+    this.accumulatedPausedMs = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   FocusSessionsCompanion.insert({
@@ -4370,6 +4494,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
     this.endedAt = const Value.absent(),
     required int plannedMinutes,
     required String kind,
+    this.status = const Value.absent(),
+    this.pausedAt = const Value.absent(),
+    this.accumulatedPausedMs = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        startedAt = Value(startedAt),
@@ -4381,6 +4508,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
     Expression<DateTime>? endedAt,
     Expression<int>? plannedMinutes,
     Expression<String>? kind,
+    Expression<String>? status,
+    Expression<DateTime>? pausedAt,
+    Expression<int>? accumulatedPausedMs,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4389,6 +4519,10 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
       if (endedAt != null) 'ended_at': endedAt,
       if (plannedMinutes != null) 'planned_minutes': plannedMinutes,
       if (kind != null) 'kind': kind,
+      if (status != null) 'status': status,
+      if (pausedAt != null) 'paused_at': pausedAt,
+      if (accumulatedPausedMs != null)
+        'accumulated_paused_ms': accumulatedPausedMs,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4399,6 +4533,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
     Value<DateTime?>? endedAt,
     Value<int>? plannedMinutes,
     Value<String>? kind,
+    Value<String>? status,
+    Value<DateTime?>? pausedAt,
+    Value<int>? accumulatedPausedMs,
     Value<int>? rowid,
   }) {
     return FocusSessionsCompanion(
@@ -4407,6 +4544,9 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
       endedAt: endedAt ?? this.endedAt,
       plannedMinutes: plannedMinutes ?? this.plannedMinutes,
       kind: kind ?? this.kind,
+      status: status ?? this.status,
+      pausedAt: pausedAt ?? this.pausedAt,
+      accumulatedPausedMs: accumulatedPausedMs ?? this.accumulatedPausedMs,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4429,6 +4569,15 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (pausedAt.present) {
+      map['paused_at'] = Variable<DateTime>(pausedAt.value);
+    }
+    if (accumulatedPausedMs.present) {
+      map['accumulated_paused_ms'] = Variable<int>(accumulatedPausedMs.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4443,6 +4592,527 @@ class FocusSessionsCompanion extends UpdateCompanion<FocusSession> {
           ..write('endedAt: $endedAt, ')
           ..write('plannedMinutes: $plannedMinutes, ')
           ..write('kind: $kind, ')
+          ..write('status: $status, ')
+          ..write('pausedAt: $pausedAt, ')
+          ..write('accumulatedPausedMs: $accumulatedPausedMs, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EventsTable extends Events with TableInfo<$EventsTable, Event> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startAtMeta = const VerificationMeta(
+    'startAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startAt = GeneratedColumn<DateTime>(
+    'start_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endAtMeta = const VerificationMeta('endAt');
+  @override
+  late final GeneratedColumn<DateTime> endAt = GeneratedColumn<DateTime>(
+    'end_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isAllDayMeta = const VerificationMeta(
+    'isAllDay',
+  );
+  @override
+  late final GeneratedColumn<bool> isAllDay = GeneratedColumn<bool>(
+    'is_all_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_all_day" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _archivedAtMeta = const VerificationMeta(
+    'archivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> archivedAt = GeneratedColumn<DateTime>(
+    'archived_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    description,
+    startAt,
+    endAt,
+    isAllDay,
+    createdAt,
+    archivedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Event> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_at')) {
+      context.handle(
+        _startAtMeta,
+        startAt.isAcceptableOrUnknown(data['start_at']!, _startAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startAtMeta);
+    }
+    if (data.containsKey('end_at')) {
+      context.handle(
+        _endAtMeta,
+        endAt.isAcceptableOrUnknown(data['end_at']!, _endAtMeta),
+      );
+    }
+    if (data.containsKey('is_all_day')) {
+      context.handle(
+        _isAllDayMeta,
+        isAllDay.isAcceptableOrUnknown(data['is_all_day']!, _isAllDayMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('archived_at')) {
+      context.handle(
+        _archivedAtMeta,
+        archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Event map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Event(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      startAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_at'],
+      )!,
+      endAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_at'],
+      ),
+      isAllDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_all_day'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      archivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}archived_at'],
+      ),
+    );
+  }
+
+  @override
+  $EventsTable createAlias(String alias) {
+    return $EventsTable(attachedDatabase, alias);
+  }
+}
+
+class Event extends DataClass implements Insertable<Event> {
+  final String id;
+  final String title;
+  final String? description;
+  final DateTime startAt;
+  final DateTime? endAt;
+  final bool isAllDay;
+  final DateTime createdAt;
+  final DateTime? archivedAt;
+  const Event({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.startAt,
+    this.endAt,
+    required this.isAllDay,
+    required this.createdAt,
+    this.archivedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['start_at'] = Variable<DateTime>(startAt);
+    if (!nullToAbsent || endAt != null) {
+      map['end_at'] = Variable<DateTime>(endAt);
+    }
+    map['is_all_day'] = Variable<bool>(isAllDay);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || archivedAt != null) {
+      map['archived_at'] = Variable<DateTime>(archivedAt);
+    }
+    return map;
+  }
+
+  EventsCompanion toCompanion(bool nullToAbsent) {
+    return EventsCompanion(
+      id: Value(id),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      startAt: Value(startAt),
+      endAt: endAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endAt),
+      isAllDay: Value(isAllDay),
+      createdAt: Value(createdAt),
+      archivedAt: archivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(archivedAt),
+    );
+  }
+
+  factory Event.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Event(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      startAt: serializer.fromJson<DateTime>(json['startAt']),
+      endAt: serializer.fromJson<DateTime?>(json['endAt']),
+      isAllDay: serializer.fromJson<bool>(json['isAllDay']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'startAt': serializer.toJson<DateTime>(startAt),
+      'endAt': serializer.toJson<DateTime?>(endAt),
+      'isAllDay': serializer.toJson<bool>(isAllDay),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'archivedAt': serializer.toJson<DateTime?>(archivedAt),
+    };
+  }
+
+  Event copyWith({
+    String? id,
+    String? title,
+    Value<String?> description = const Value.absent(),
+    DateTime? startAt,
+    Value<DateTime?> endAt = const Value.absent(),
+    bool? isAllDay,
+    DateTime? createdAt,
+    Value<DateTime?> archivedAt = const Value.absent(),
+  }) => Event(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    startAt: startAt ?? this.startAt,
+    endAt: endAt.present ? endAt.value : this.endAt,
+    isAllDay: isAllDay ?? this.isAllDay,
+    createdAt: createdAt ?? this.createdAt,
+    archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+  );
+  Event copyWithCompanion(EventsCompanion data) {
+    return Event(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      startAt: data.startAt.present ? data.startAt.value : this.startAt,
+      endAt: data.endAt.present ? data.endAt.value : this.endAt,
+      isAllDay: data.isAllDay.present ? data.isAllDay.value : this.isAllDay,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      archivedAt: data.archivedAt.present
+          ? data.archivedAt.value
+          : this.archivedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Event(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('isAllDay: $isAllDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('archivedAt: $archivedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    startAt,
+    endAt,
+    isAllDay,
+    createdAt,
+    archivedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Event &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.startAt == this.startAt &&
+          other.endAt == this.endAt &&
+          other.isAllDay == this.isAllDay &&
+          other.createdAt == this.createdAt &&
+          other.archivedAt == this.archivedAt);
+}
+
+class EventsCompanion extends UpdateCompanion<Event> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<DateTime> startAt;
+  final Value<DateTime?> endAt;
+  final Value<bool> isAllDay;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> archivedAt;
+  final Value<int> rowid;
+  const EventsCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.startAt = const Value.absent(),
+    this.endAt = const Value.absent(),
+    this.isAllDay = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.archivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EventsCompanion.insert({
+    required String id,
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime startAt,
+    this.endAt = const Value.absent(),
+    this.isAllDay = const Value.absent(),
+    required DateTime createdAt,
+    this.archivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       startAt = Value(startAt),
+       createdAt = Value(createdAt);
+  static Insertable<Event> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? startAt,
+    Expression<DateTime>? endAt,
+    Expression<bool>? isAllDay,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? archivedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (startAt != null) 'start_at': startAt,
+      if (endAt != null) 'end_at': endAt,
+      if (isAllDay != null) 'is_all_day': isAllDay,
+      if (createdAt != null) 'created_at': createdAt,
+      if (archivedAt != null) 'archived_at': archivedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<DateTime>? startAt,
+    Value<DateTime?>? endAt,
+    Value<bool>? isAllDay,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? archivedAt,
+    Value<int>? rowid,
+  }) {
+    return EventsCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startAt: startAt ?? this.startAt,
+      endAt: endAt ?? this.endAt,
+      isAllDay: isAllDay ?? this.isAllDay,
+      createdAt: createdAt ?? this.createdAt,
+      archivedAt: archivedAt ?? this.archivedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (startAt.present) {
+      map['start_at'] = Variable<DateTime>(startAt.value);
+    }
+    if (endAt.present) {
+      map['end_at'] = Variable<DateTime>(endAt.value);
+    }
+    if (isAllDay.present) {
+      map['is_all_day'] = Variable<bool>(isAllDay.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (archivedAt.present) {
+      map['archived_at'] = Variable<DateTime>(archivedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EventsCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('isAllDay: $isAllDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('archivedAt: $archivedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4465,6 +5135,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MoodEntriesTable moodEntries = $MoodEntriesTable(this);
   late final $NotificationsTable notifications = $NotificationsTable(this);
   late final $FocusSessionsTable focusSessions = $FocusSessionsTable(this);
+  late final $EventsTable events = $EventsTable(this);
   late final NotesDao notesDao = NotesDao(this as AppDatabase);
   late final RemindersDao remindersDao = RemindersDao(this as AppDatabase);
   late final ExpensesDao expensesDao = ExpensesDao(this as AppDatabase);
@@ -4479,6 +5150,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final FocusSessionsDao focusSessionsDao = FocusSessionsDao(
     this as AppDatabase,
   );
+  late final EventsDao eventsDao = EventsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4495,6 +5167,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     moodEntries,
     notifications,
     focusSessions,
+    events,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7247,6 +7920,9 @@ typedef $$FocusSessionsTableCreateCompanionBuilder =
       Value<DateTime?> endedAt,
       required int plannedMinutes,
       required String kind,
+      Value<String> status,
+      Value<DateTime?> pausedAt,
+      Value<int> accumulatedPausedMs,
       Value<int> rowid,
     });
 typedef $$FocusSessionsTableUpdateCompanionBuilder =
@@ -7256,6 +7932,9 @@ typedef $$FocusSessionsTableUpdateCompanionBuilder =
       Value<DateTime?> endedAt,
       Value<int> plannedMinutes,
       Value<String> kind,
+      Value<String> status,
+      Value<DateTime?> pausedAt,
+      Value<int> accumulatedPausedMs,
       Value<int> rowid,
     });
 
@@ -7290,6 +7969,21 @@ class $$FocusSessionsTableFilterComposer
 
   ColumnFilters<String> get kind => $composableBuilder(
     column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get pausedAt => $composableBuilder(
+    column: $table.pausedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get accumulatedPausedMs => $composableBuilder(
+    column: $table.accumulatedPausedMs,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7327,6 +8021,21 @@ class $$FocusSessionsTableOrderingComposer
     column: $table.kind,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get pausedAt => $composableBuilder(
+    column: $table.pausedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get accumulatedPausedMs => $composableBuilder(
+    column: $table.accumulatedPausedMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FocusSessionsTableAnnotationComposer
@@ -7354,6 +8063,17 @@ class $$FocusSessionsTableAnnotationComposer
 
   GeneratedColumn<String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get pausedAt =>
+      $composableBuilder(column: $table.pausedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get accumulatedPausedMs => $composableBuilder(
+    column: $table.accumulatedPausedMs,
+    builder: (column) => column,
+  );
 }
 
 class $$FocusSessionsTableTableManager
@@ -7392,6 +8112,9 @@ class $$FocusSessionsTableTableManager
                 Value<DateTime?> endedAt = const Value.absent(),
                 Value<int> plannedMinutes = const Value.absent(),
                 Value<String> kind = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> pausedAt = const Value.absent(),
+                Value<int> accumulatedPausedMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FocusSessionsCompanion(
                 id: id,
@@ -7399,6 +8122,9 @@ class $$FocusSessionsTableTableManager
                 endedAt: endedAt,
                 plannedMinutes: plannedMinutes,
                 kind: kind,
+                status: status,
+                pausedAt: pausedAt,
+                accumulatedPausedMs: accumulatedPausedMs,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7408,6 +8134,9 @@ class $$FocusSessionsTableTableManager
                 Value<DateTime?> endedAt = const Value.absent(),
                 required int plannedMinutes,
                 required String kind,
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> pausedAt = const Value.absent(),
+                Value<int> accumulatedPausedMs = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FocusSessionsCompanion.insert(
                 id: id,
@@ -7415,6 +8144,9 @@ class $$FocusSessionsTableTableManager
                 endedAt: endedAt,
                 plannedMinutes: plannedMinutes,
                 kind: kind,
+                status: status,
+                pausedAt: pausedAt,
+                accumulatedPausedMs: accumulatedPausedMs,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7440,6 +8172,261 @@ typedef $$FocusSessionsTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $FocusSessionsTable, FocusSession>,
       ),
       FocusSession,
+      PrefetchHooks Function()
+    >;
+typedef $$EventsTableCreateCompanionBuilder =
+    EventsCompanion Function({
+      required String id,
+      required String title,
+      Value<String?> description,
+      required DateTime startAt,
+      Value<DateTime?> endAt,
+      Value<bool> isAllDay,
+      required DateTime createdAt,
+      Value<DateTime?> archivedAt,
+      Value<int> rowid,
+    });
+typedef $$EventsTableUpdateCompanionBuilder =
+    EventsCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String?> description,
+      Value<DateTime> startAt,
+      Value<DateTime?> endAt,
+      Value<bool> isAllDay,
+      Value<DateTime> createdAt,
+      Value<DateTime?> archivedAt,
+      Value<int> rowid,
+    });
+
+class $$EventsTableFilterComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAllDay => $composableBuilder(
+    column: $table.isAllDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isAllDay => $composableBuilder(
+    column: $table.isAllDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startAt =>
+      $composableBuilder(column: $table.startAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endAt =>
+      $composableBuilder(column: $table.endAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAllDay =>
+      $composableBuilder(column: $table.isAllDay, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get archivedAt => $composableBuilder(
+    column: $table.archivedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$EventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EventsTable,
+          Event,
+          $$EventsTableFilterComposer,
+          $$EventsTableOrderingComposer,
+          $$EventsTableAnnotationComposer,
+          $$EventsTableCreateCompanionBuilder,
+          $$EventsTableUpdateCompanionBuilder,
+          (Event, BaseReferences<_$AppDatabase, $EventsTable, Event>),
+          Event,
+          PrefetchHooks Function()
+        > {
+  $$EventsTableTableManager(_$AppDatabase db, $EventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<DateTime> startAt = const Value.absent(),
+                Value<DateTime?> endAt = const Value.absent(),
+                Value<bool> isAllDay = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> archivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EventsCompanion(
+                id: id,
+                title: title,
+                description: description,
+                startAt: startAt,
+                endAt: endAt,
+                isAllDay: isAllDay,
+                createdAt: createdAt,
+                archivedAt: archivedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required DateTime startAt,
+                Value<DateTime?> endAt = const Value.absent(),
+                Value<bool> isAllDay = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime?> archivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EventsCompanion.insert(
+                id: id,
+                title: title,
+                description: description,
+                startAt: startAt,
+                endAt: endAt,
+                isAllDay: isAllDay,
+                createdAt: createdAt,
+                archivedAt: archivedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EventsTable,
+      Event,
+      $$EventsTableFilterComposer,
+      $$EventsTableOrderingComposer,
+      $$EventsTableAnnotationComposer,
+      $$EventsTableCreateCompanionBuilder,
+      $$EventsTableUpdateCompanionBuilder,
+      (Event, BaseReferences<_$AppDatabase, $EventsTable, Event>),
+      Event,
       PrefetchHooks Function()
     >;
 
@@ -7468,4 +8455,6 @@ class $AppDatabaseManager {
       $$NotificationsTableTableManager(_db, _db.notifications);
   $$FocusSessionsTableTableManager get focusSessions =>
       $$FocusSessionsTableTableManager(_db, _db.focusSessions);
+  $$EventsTableTableManager get events =>
+      $$EventsTableTableManager(_db, _db.events);
 }

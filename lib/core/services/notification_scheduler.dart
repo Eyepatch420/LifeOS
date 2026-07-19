@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -14,6 +17,7 @@ abstract interface class NotificationScheduler {
     required DateTime when,
     required String title,
     required String body,
+    String? payload,
   });
 
   Future<void> cancel(String id);
@@ -28,6 +32,7 @@ class NoopNotificationScheduler implements NotificationScheduler {
     required DateTime when,
     required String title,
     required String body,
+    String? payload,
   }) async {}
 
   @override
@@ -55,8 +60,12 @@ class LocalNotificationScheduler implements NotificationScheduler {
       'Scheduled reminder notifications from LifeOS';
 
   /// Must be called once, before the first [scheduleAt]/[cancel] call —
-  /// initializes the plugin and the `timezone` database, and registers the
-  /// Android notification channel `scheduleAt` posts to.
+  /// initializes the plugin and the `timezone` database, registers the
+  /// Android notification channel `scheduleAt` posts to, and wires
+  /// [notificationTapDispatcher] to every tap-delivery path the plugin
+  /// supports (foreground/background here; [consumeLaunchPayload] handles
+  /// cold start separately since it needs an app-startup call site, not an
+  /// `initialize`-time callback).
   Future<void> initialize() async {
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.local);
@@ -65,7 +74,13 @@ class LocalNotificationScheduler implements NotificationScheduler {
       '@mipmap/ic_launcher',
     );
     const settings = InitializationSettings(android: androidSettings);
-    await _plugin.initialize(settings);
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (response) =>
+          notificationTapDispatcher.dispatch(response.payload),
+      onDidReceiveBackgroundNotificationResponse:
+          handleBackgroundNotificationResponse,
+    );
 
     await _plugin
         .resolvePlatformSpecificImplementation<
@@ -81,29 +96,82 @@ class LocalNotificationScheduler implements NotificationScheduler {
         );
   }
 
+  /// Reads whatever notification (if any) cold-launched the app and
+  /// forwards its payload through the same [notificationTapDispatcher]
+  /// stream a live tap would use, so `app.dart`'s single listener handles
+  /// cold start, background, and foreground taps identically. Must be
+  /// called once during startup, after [initialize] and after the widget
+  /// tree (specifically the router) is far enough along to act on a tap —
+  /// see `app.dart`.
+  Future<void> consumeLaunchPayload() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp ?? false) {
+      notificationTapDispatcher.dispatch(
+        details?.notificationResponse?.payload,
+      );
+    }
+  }
+
   @override
   Future<void> scheduleAt({
     required String id,
     required DateTime when,
     required String title,
     required String body,
+    String? payload,
   }) async {
-    await _plugin.zonedSchedule(
-      _stableIntId(id),
-      title,
-      body,
-      tz.TZDateTime.from(when, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: _channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+    final when_ = tz.TZDateTime.from(when, tz.local);
+
+    try {
+      await _plugin.zonedSchedule(
+        _stableIntId(id),
+        title,
+        body,
+        when_,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: payload,
+      );
+    } on PlatformException catch (e) {
+      // Android 12+ requires a separate user-granted "Alarms & reminders"
+      // permission for exact alarms (`SCHEDULE_EXACT_ALARM`) that this app
+      // does not currently request — see docs/implemented_features.md's
+      // Focus entry for why declaring/requesting it is deferred rather
+      // than added reflexively here (Play Store policy implications for a
+      // permission this app doesn't strictly need). A denied/unpermitted
+      // exact alarm must never crash the caller or block the notification
+      // entirely: fall back to `inexact` — the only mode that does NOT
+      // itself require the exact-alarm permission (`alarmClock` was tried
+      // first and throws the same `exact_alarms_not_permitted` error, since
+      // Android treats alarm-clock-style alarms as exact too) — so a
+      // notification still fires, just without the exact-time guarantee.
+      // Notifications are enhancement, not a dependency for Focus timer
+      // correctness — the persisted session timeline is unaffected either
+      // way.
+      if (e.code != 'exact_alarms_not_permitted') rethrow;
+      debugPrint(
+        'NotificationScheduler: exact alarm not permitted, falling back to '
+        'inexact scheduling for "$id".',
+      );
+      await _plugin.zonedSchedule(
+        _stableIntId(id),
+        title,
+        body,
+        when_,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexact,
+        payload: payload,
+      );
+    }
   }
 
   @override

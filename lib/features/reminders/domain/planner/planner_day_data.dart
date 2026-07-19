@@ -22,6 +22,22 @@ abstract class PlannerDayData with _$PlannerDayData {
   int get totalCount => scheduled.length;
 
   bool get isEmpty => overdueCarryover.isEmpty && scheduled.isEmpty;
+
+  /// [scheduled] items with [PlannerItem.temporalKind] `allDay` (Calendar
+  /// events only, as of Phase 7), shown in their own group ahead of the
+  /// timed timeline — see `PlannerScreen`'s "ALL DAY" section. Kept as a
+  /// derived getter (not a separately-classified field) so `plannerDayFor`
+  /// stays a single sort-then-classify pass; the split itself never needs
+  /// `sourceType` knowledge, only [PlannerItem.temporalKind].
+  List<PlannerItem> get allDayItems => scheduled
+      .where((i) => i.temporalKind == PlannerTemporalKind.allDay)
+      .toList();
+
+  /// [scheduled] items with a specific clock time — everything that isn't
+  /// [allDayItems].
+  List<PlannerItem> get timedItems => scheduled
+      .where((i) => i.temporalKind == PlannerTemporalKind.timed)
+      .toList();
 }
 
 /// Pure classification of [items] into a single day's Planner view for

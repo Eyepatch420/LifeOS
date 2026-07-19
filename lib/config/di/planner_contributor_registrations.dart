@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/core/planner/planner_contributor.dart';
+import 'package:lifeos/features/calendar/presentation/providers/calendar_dashboard_provider.dart';
+import 'package:lifeos/features/calendar/presentation/providers/calendar_planner_contributor.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_planner_contributor.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
@@ -15,6 +17,7 @@ List<PlannerContributor> plannerContributors(Ref ref) {
   return [
     RemindersPlannerContributor(ref.watch(remindersRepositoryProvider)),
     HabitsPlannerContributor(ref.watch(habitsRepositoryProvider)),
+    CalendarPlannerContributor(ref.watch(eventsRepositoryProvider)),
   ];
 }
 

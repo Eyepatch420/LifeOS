@@ -24,6 +24,7 @@ abstract final class RoutePaths {
   static const String noteEdit = 'notes/:noteId/edit';
   static const String lists = 'lists';
   static const String listDetail = 'lists/:listId';
+  static const String focus = 'focus';
 
   // Nested under the Reminders branch's own `/reminders` route (not Home's)
   // — the Reminders workspace owns its full CRUD route surface. Static
@@ -54,6 +55,15 @@ abstract final class RoutePaths {
   static const String habits = 'habits';
   static const String newHabit = 'habits/new';
   static const String habitDetail = 'habits/:habitId';
+
+  // Calendar workspace — nested under the Reminders branch's own
+  // `/reminders` route for the same reason Habits is (a
+  // `PlanningWorkspaceScaffold` section, not its own bottom-nav branch).
+  // `calendar`/`newEvent` declared as siblings of `habits` before the
+  // dynamic `:eventId` child for the same static-before-dynamic reason.
+  static const String calendar = 'calendar';
+  static const String newEvent = 'calendar/new';
+  static const String eventDetail = 'calendar/:eventId';
 }
 
 abstract final class RouteNames {
@@ -79,9 +89,13 @@ abstract final class RouteNames {
   static const String noteEdit = 'noteEdit';
   static const String lists = 'lists';
   static const String listDetail = 'listDetail';
+  static const String focus = 'focus';
   static const String reminderDetail = 'reminderDetail';
   static const String remindersAll = 'remindersAll';
   static const String planner = 'planner';
   static const String habits = 'habits';
   static const String habitDetail = 'habitDetail';
+  static const String calendar = 'calendar';
+  static const String newEvent = 'newEvent';
+  static const String eventDetail = 'eventDetail';
 }

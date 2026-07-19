@@ -127,7 +127,15 @@ Map<String, HomeSectionBuilder> buildHomeSectionBuilders(WidgetRef ref) {
   return {
     HomeSectionIds.overview: (context) => _unwrapList(
       ref.watch(overviewStatsProvider),
-      (stats) => OverviewStatsRow(stats: stats),
+      (stats) => OverviewStatsRow(
+        stats: [
+          for (final stat in stats)
+            if (stat.label == 'Focus')
+              stat.copyWith(onTap: () => context.pushNamed(RouteNames.focus))
+            else
+              stat,
+        ],
+      ),
     ),
     HomeSectionIds.quickActions: (context) =>
         _unwrapList(ref.watch(quickActionsProvider), (actions) {

@@ -30,8 +30,19 @@ class AgendaRegistry {
     final received = List<bool>.filled(_contributors.length, false);
 
     void emit() {
+      // All-day entries sort ahead of every timed entry on the same
+      // calendar day — an all-day event has no meaningful clock time (see
+      // `AgendaEntry.isAllDay`'s doc comment), so comparing raw `time`
+      // values alone would place it arbitrarily (typically midnight,
+      // reading as misleadingly "first" or "overdue"). Ties within the
+      // same [isAllDay] group still sort by `time`.
       final merged = [for (final entries in latest) ...entries]
-        ..sort((a, b) => a.time.compareTo(b.time));
+        ..sort((a, b) {
+          if (a.isAllDay != b.isAllDay) {
+            return a.isAllDay ? -1 : 1;
+          }
+          return a.time.compareTo(b.time);
+        });
       controller.add(merged);
     }
 

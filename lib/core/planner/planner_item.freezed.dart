@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PlannerItem {
 
- String get id; PlannerSourceType get sourceType; String get sourceId; String get title; DateTime get scheduledAt; bool get isCompleted; bool get isUrgent; bool get isRecurring; String get routeName; Map<String, String> get pathParameters;
+ String get id; PlannerSourceType get sourceType; String get sourceId; String get title; DateTime get scheduledAt; bool get isCompleted; bool get isUrgent; bool get isRecurring; String get routeName; Map<String, String> get pathParameters; PlannerTemporalKind get temporalKind; bool get canComplete;
 /// Create a copy of PlannerItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PlannerItemCopyWith<PlannerItem> get copyWith => _$PlannerItemCopyWithImpl<Plan
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannerItem&&(identical(other.id, id) || other.id == id)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.title, title) || other.title == title)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.routeName, routeName) || other.routeName == routeName)&&const DeepCollectionEquality().equals(other.pathParameters, pathParameters));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlannerItem&&(identical(other.id, id) || other.id == id)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.title, title) || other.title == title)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.routeName, routeName) || other.routeName == routeName)&&const DeepCollectionEquality().equals(other.pathParameters, pathParameters)&&(identical(other.temporalKind, temporalKind) || other.temporalKind == temporalKind)&&(identical(other.canComplete, canComplete) || other.canComplete == canComplete));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,sourceType,sourceId,title,scheduledAt,isCompleted,isUrgent,isRecurring,routeName,const DeepCollectionEquality().hash(pathParameters));
+int get hashCode => Object.hash(runtimeType,id,sourceType,sourceId,title,scheduledAt,isCompleted,isUrgent,isRecurring,routeName,const DeepCollectionEquality().hash(pathParameters),temporalKind,canComplete);
 
 @override
 String toString() {
-  return 'PlannerItem(id: $id, sourceType: $sourceType, sourceId: $sourceId, title: $title, scheduledAt: $scheduledAt, isCompleted: $isCompleted, isUrgent: $isUrgent, isRecurring: $isRecurring, routeName: $routeName, pathParameters: $pathParameters)';
+  return 'PlannerItem(id: $id, sourceType: $sourceType, sourceId: $sourceId, title: $title, scheduledAt: $scheduledAt, isCompleted: $isCompleted, isUrgent: $isUrgent, isRecurring: $isRecurring, routeName: $routeName, pathParameters: $pathParameters, temporalKind: $temporalKind, canComplete: $canComplete)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $PlannerItemCopyWith<$Res>  {
   factory $PlannerItemCopyWith(PlannerItem value, $Res Function(PlannerItem) _then) = _$PlannerItemCopyWithImpl;
 @useResult
 $Res call({
- String id, PlannerSourceType sourceType, String sourceId, String title, DateTime scheduledAt, bool isCompleted, bool isUrgent, bool isRecurring, String routeName, Map<String, String> pathParameters
+ String id, PlannerSourceType sourceType, String sourceId, String title, DateTime scheduledAt, bool isCompleted, bool isUrgent, bool isRecurring, String routeName, Map<String, String> pathParameters, PlannerTemporalKind temporalKind, bool canComplete
 });
 
 
@@ -62,7 +62,7 @@ class _$PlannerItemCopyWithImpl<$Res>
 
 /// Create a copy of PlannerItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sourceType = null,Object? sourceId = null,Object? title = null,Object? scheduledAt = null,Object? isCompleted = null,Object? isUrgent = null,Object? isRecurring = null,Object? routeName = null,Object? pathParameters = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sourceType = null,Object? sourceId = null,Object? title = null,Object? scheduledAt = null,Object? isCompleted = null,Object? isUrgent = null,Object? isRecurring = null,Object? routeName = null,Object? pathParameters = null,Object? temporalKind = null,Object? canComplete = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sourceType: null == sourceType ? _self.sourceType : sourceType // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,9 @@ as bool,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_n
 as bool,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
 as bool,routeName: null == routeName ? _self.routeName : routeName // ignore: cast_nullable_to_non_nullable
 as String,pathParameters: null == pathParameters ? _self.pathParameters : pathParameters // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,
+as Map<String, String>,temporalKind: null == temporalKind ? _self.temporalKind : temporalKind // ignore: cast_nullable_to_non_nullable
+as PlannerTemporalKind,canComplete: null == canComplete ? _self.canComplete : canComplete // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -159,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters,  PlannerTemporalKind temporalKind,  bool canComplete)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlannerItem() when $default != null:
-return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters);case _:
+return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters,_that.temporalKind,_that.canComplete);case _:
   return orElse();
 
 }
@@ -180,10 +182,10 @@ return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.sched
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters,  PlannerTemporalKind temporalKind,  bool canComplete)  $default,) {final _that = this;
 switch (_that) {
 case _PlannerItem():
-return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters);case _:
+return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters,_that.temporalKind,_that.canComplete);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +202,10 @@ return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.sched
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  PlannerSourceType sourceType,  String sourceId,  String title,  DateTime scheduledAt,  bool isCompleted,  bool isUrgent,  bool isRecurring,  String routeName,  Map<String, String> pathParameters,  PlannerTemporalKind temporalKind,  bool canComplete)?  $default,) {final _that = this;
 switch (_that) {
 case _PlannerItem() when $default != null:
-return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters);case _:
+return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.scheduledAt,_that.isCompleted,_that.isUrgent,_that.isRecurring,_that.routeName,_that.pathParameters,_that.temporalKind,_that.canComplete);case _:
   return null;
 
 }
@@ -215,7 +217,7 @@ return $default(_that.id,_that.sourceType,_that.sourceId,_that.title,_that.sched
 
 
 class _PlannerItem implements PlannerItem {
-  const _PlannerItem({required this.id, required this.sourceType, required this.sourceId, required this.title, required this.scheduledAt, required this.isCompleted, required this.isUrgent, required this.isRecurring, required this.routeName, required final  Map<String, String> pathParameters}): _pathParameters = pathParameters;
+  const _PlannerItem({required this.id, required this.sourceType, required this.sourceId, required this.title, required this.scheduledAt, required this.isCompleted, required this.isUrgent, required this.isRecurring, required this.routeName, required final  Map<String, String> pathParameters, this.temporalKind = PlannerTemporalKind.timed, this.canComplete = true}): _pathParameters = pathParameters;
   
 
 @override final  String id;
@@ -234,6 +236,8 @@ class _PlannerItem implements PlannerItem {
   return EqualUnmodifiableMapView(_pathParameters);
 }
 
+@override@JsonKey() final  PlannerTemporalKind temporalKind;
+@override@JsonKey() final  bool canComplete;
 
 /// Create a copy of PlannerItem
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +249,16 @@ _$PlannerItemCopyWith<_PlannerItem> get copyWith => __$PlannerItemCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlannerItem&&(identical(other.id, id) || other.id == id)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.title, title) || other.title == title)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.routeName, routeName) || other.routeName == routeName)&&const DeepCollectionEquality().equals(other._pathParameters, _pathParameters));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlannerItem&&(identical(other.id, id) || other.id == id)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.title, title) || other.title == title)&&(identical(other.scheduledAt, scheduledAt) || other.scheduledAt == scheduledAt)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.routeName, routeName) || other.routeName == routeName)&&const DeepCollectionEquality().equals(other._pathParameters, _pathParameters)&&(identical(other.temporalKind, temporalKind) || other.temporalKind == temporalKind)&&(identical(other.canComplete, canComplete) || other.canComplete == canComplete));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,sourceType,sourceId,title,scheduledAt,isCompleted,isUrgent,isRecurring,routeName,const DeepCollectionEquality().hash(_pathParameters));
+int get hashCode => Object.hash(runtimeType,id,sourceType,sourceId,title,scheduledAt,isCompleted,isUrgent,isRecurring,routeName,const DeepCollectionEquality().hash(_pathParameters),temporalKind,canComplete);
 
 @override
 String toString() {
-  return 'PlannerItem(id: $id, sourceType: $sourceType, sourceId: $sourceId, title: $title, scheduledAt: $scheduledAt, isCompleted: $isCompleted, isUrgent: $isUrgent, isRecurring: $isRecurring, routeName: $routeName, pathParameters: $pathParameters)';
+  return 'PlannerItem(id: $id, sourceType: $sourceType, sourceId: $sourceId, title: $title, scheduledAt: $scheduledAt, isCompleted: $isCompleted, isUrgent: $isUrgent, isRecurring: $isRecurring, routeName: $routeName, pathParameters: $pathParameters, temporalKind: $temporalKind, canComplete: $canComplete)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$PlannerItemCopyWith<$Res> implements $PlannerItemCopyWith
   factory _$PlannerItemCopyWith(_PlannerItem value, $Res Function(_PlannerItem) _then) = __$PlannerItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, PlannerSourceType sourceType, String sourceId, String title, DateTime scheduledAt, bool isCompleted, bool isUrgent, bool isRecurring, String routeName, Map<String, String> pathParameters
+ String id, PlannerSourceType sourceType, String sourceId, String title, DateTime scheduledAt, bool isCompleted, bool isUrgent, bool isRecurring, String routeName, Map<String, String> pathParameters, PlannerTemporalKind temporalKind, bool canComplete
 });
 
 
@@ -282,7 +286,7 @@ class __$PlannerItemCopyWithImpl<$Res>
 
 /// Create a copy of PlannerItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sourceType = null,Object? sourceId = null,Object? title = null,Object? scheduledAt = null,Object? isCompleted = null,Object? isUrgent = null,Object? isRecurring = null,Object? routeName = null,Object? pathParameters = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sourceType = null,Object? sourceId = null,Object? title = null,Object? scheduledAt = null,Object? isCompleted = null,Object? isUrgent = null,Object? isRecurring = null,Object? routeName = null,Object? pathParameters = null,Object? temporalKind = null,Object? canComplete = null,}) {
   return _then(_PlannerItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sourceType: null == sourceType ? _self.sourceType : sourceType // ignore: cast_nullable_to_non_nullable
@@ -294,7 +298,9 @@ as bool,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_n
 as bool,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
 as bool,routeName: null == routeName ? _self.routeName : routeName // ignore: cast_nullable_to_non_nullable
 as String,pathParameters: null == pathParameters ? _self._pathParameters : pathParameters // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,
+as Map<String, String>,temporalKind: null == temporalKind ? _self.temporalKind : temporalKind // ignore: cast_nullable_to_non_nullable
+as PlannerTemporalKind,canComplete: null == canComplete ? _self.canComplete : canComplete // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

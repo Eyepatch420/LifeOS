@@ -20,6 +20,7 @@ class _FakeScheduler implements NotificationScheduler {
     required DateTime when,
     required String title,
     required String body,
+    String? payload,
   }) async {
     scheduled.add(id);
     lastScheduledWhen = when;

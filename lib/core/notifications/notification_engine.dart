@@ -45,6 +45,7 @@ class NotificationEngine {
             when: intent.when,
             title: intent.title,
             body: intent.body,
+            payload: intent.payload,
           );
           await notificationsDao.insert(
             db.NotificationsCompanion.insert(

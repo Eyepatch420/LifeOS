@@ -28,6 +28,16 @@ part 'planner_item.freezed.dart';
 /// (see `test/contracts/import_boundary_test.dart`) — mirrors why
 /// `AgendaEntry`/`SearchableEntity` also live under `core/`/a shared
 /// feature rather than inside Reminders.
+///
+/// [temporalKind]/[canComplete] were added in Phase 7 once Calendar Events
+/// became a third contributor: an event has no "complete" action (it isn't
+/// a task) and an all-day event has no meaningful clock time, so both
+/// PlannerScreen-visible capabilities became explicit neutral fields
+/// instead of PlannerScreen switching on [sourceType] — see
+/// [PlannerContributor]'s doc comment and `docs/architecture_principles.md`.
+/// [scheduledAt] keeps its existing meaning for every source (the instant
+/// used for day-classification/sorting); for an all-day item it is the
+/// [dateOnly]-normalized day.
 @freezed
 abstract class PlannerItem with _$PlannerItem {
   const factory PlannerItem({
@@ -41,6 +51,8 @@ abstract class PlannerItem with _$PlannerItem {
     required bool isRecurring,
     required String routeName,
     required Map<String, String> pathParameters,
+    @Default(PlannerTemporalKind.timed) PlannerTemporalKind temporalKind,
+    @Default(true) bool canComplete,
   }) = _PlannerItem;
 }
 
@@ -48,4 +60,11 @@ abstract class PlannerItem with _$PlannerItem {
 /// [PlannerContributor]'s owner can be identified for completion routing
 /// (see `plannerContributorsProvider`'s doc comment) without Planner
 /// importing each feature's repository directly.
-enum PlannerSourceType { reminder, habit }
+enum PlannerSourceType { reminder, habit, event }
+
+/// Whether a [PlannerItem] has a specific clock time ([timed], the default —
+/// Reminders/Habits both have one) or only a calendar date ([allDay] — an
+/// all-day Calendar event). Lets `PlannerScreen` group/render all-day items
+/// separately from a timeline without fabricating a misleading "12:00 AM"
+/// time or special-casing `sourceType == event`.
+enum PlannerTemporalKind { timed, allDay }

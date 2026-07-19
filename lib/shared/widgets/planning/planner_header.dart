@@ -10,6 +10,13 @@ import 'package:lifeos/core/utils/date_only.dart';
 /// visually emphasized (shown) when the selected date isn't already today
 /// — see Phase 5 plan's requirement that the action not compete for
 /// attention when it wouldn't do anything.
+///
+/// Lives under `shared/widgets/planning/` (moved here Phase 7, was
+/// `features/reminders/presentation/widgets/planner/`): fully generic over
+/// `DateTime`/callbacks with no Reminders-specific knowledge, and the
+/// Calendar workspace needed the identical day-navigation header — same
+/// "genuinely shared, extract cleanly" reasoning as `PlannerItem`/
+/// `date_only.dart`'s earlier moves to `core/`.
 class PlannerHeader extends StatelessWidget {
   const PlannerHeader({
     required this.selectedDate,

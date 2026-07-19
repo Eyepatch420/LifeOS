@@ -34,7 +34,13 @@ class SearchScreen extends ConsumerWidget {
         // Home, where the matching section is already visible.
         context.pop();
       case SearchableEntityCategory.habit:
+      case SearchableEntityCategory.calendar:
         context.pushNamed(e.routeName, pathParameters: e.pathParameters!);
+      case SearchableEntityCategory.focus:
+        // No path parameters — Focus has exactly one canonical destination
+        // (the dashboard/session screen itself), not a per-entity detail
+        // route like habit/calendar results.
+        context.pushNamed(e.routeName);
     }
   }
 

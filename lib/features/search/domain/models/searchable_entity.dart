@@ -31,10 +31,12 @@ enum SearchableEntityCategory {
   upNext,
   reminder,
   habit,
+  calendar,
   home,
   remindersTab,
   health,
   finance,
   documents,
   settings,
+  focus,
 }
