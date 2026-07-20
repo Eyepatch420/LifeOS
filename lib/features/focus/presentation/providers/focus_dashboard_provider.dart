@@ -71,5 +71,7 @@ FocusSessionSummary _toSummary(FocusSession session, DateTime now) {
     elapsedMinutes: session.elapsedAt(now).inMinutes,
     isPaused: session.status == FocusSessionStatus.paused,
     startedAt: session.startedAt,
+    status: session.status,
+    endedAt: session.endedAt,
   );
 }

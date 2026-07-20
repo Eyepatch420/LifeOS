@@ -9,7 +9,9 @@ import 'package:lifeos/features/calendar/presentation/screens/new_event_screen.d
 import 'package:lifeos/features/documents/presentation/screens/documents_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/finance_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/new_expense_screen.dart';
+import 'package:lifeos/features/focus/presentation/screens/focus_completion_screen.dart';
 import 'package:lifeos/features/focus/presentation/screens/focus_screen.dart';
+import 'package:lifeos/features/focus/presentation/screens/focus_session_detail_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
@@ -213,6 +215,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     pageBuilder: (context, state) => buildFadeThroughPage(
                       key: state.pageKey,
                       child: const FocusScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.focusCompletion,
+                    name: RouteNames.focusCompletion,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: FocusCompletionScreen(
+                        sessionId: state.uri.queryParameters['sessionId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.focusSessionDetail,
+                    name: RouteNames.focusSessionDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: FocusSessionDetailScreen(
+                        sessionId: state.pathParameters['sessionId']!,
+                      ),
                     ),
                   ),
                   GoRoute(

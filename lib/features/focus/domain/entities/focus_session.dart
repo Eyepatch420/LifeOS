@@ -85,8 +85,12 @@ abstract class FocusSession with _$FocusSession {
     return startedAt.add(plannedDuration).add(pauseOffset);
   }
 
+  /// True once [now] has reached or passed [projectedEndAt] — a `<=`-style
+  /// check (`!now.isBefore(...)`), not an exact-instant match, since callers
+  /// (the once-a-second UI ticker, reconciliation on resume/process
+  /// recreation) only ever sample discrete points in time and would
+  /// otherwise skip straight past the single millisecond an exact-equality
+  /// check would require.
   bool hasNaturallyCompletedAt(DateTime now) =>
-      status == FocusSessionStatus.running &&
-      now.isAfter(projectedEndAt()) &&
-      !now.isBefore(projectedEndAt());
+      status == FocusSessionStatus.running && !now.isBefore(projectedEndAt());
 }

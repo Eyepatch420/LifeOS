@@ -25,6 +25,12 @@ abstract final class RoutePaths {
   static const String lists = 'lists';
   static const String listDetail = 'lists/:listId';
   static const String focus = 'focus';
+  // Sibling of `focus` (not nested under it, matching how `noteDetail` is a
+  // sibling of `notes` rather than nested) — the completion celebration and
+  // session-details screens are both reached from Focus but are their own
+  // routes on the root navigator.
+  static const String focusCompletion = 'focus/complete';
+  static const String focusSessionDetail = 'focus/session/:sessionId';
 
   // Nested under the Reminders branch's own `/reminders` route (not Home's)
   // — the Reminders workspace owns its full CRUD route surface. Static
@@ -90,6 +96,8 @@ abstract final class RouteNames {
   static const String lists = 'lists';
   static const String listDetail = 'listDetail';
   static const String focus = 'focus';
+  static const String focusCompletion = 'focusCompletion';
+  static const String focusSessionDetail = 'focusSessionDetail';
   static const String reminderDetail = 'reminderDetail';
   static const String remindersAll = 'remindersAll';
   static const String planner = 'planner';

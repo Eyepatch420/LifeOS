@@ -307,7 +307,7 @@ $FocusSessionSummaryCopyWith<$Res>? get activeSession {
 /// @nodoc
 mixin _$FocusSessionSummary {
 
- String get id; int get plannedMinutes; int get elapsedMinutes; bool get isPaused; DateTime get startedAt;
+ String get id; int get plannedMinutes; int get elapsedMinutes; bool get isPaused; DateTime get startedAt; FocusSessionStatus get status; DateTime? get endedAt;
 /// Create a copy of FocusSessionSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -318,16 +318,16 @@ $FocusSessionSummaryCopyWith<FocusSessionSummary> get copyWith => _$FocusSession
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusSessionSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.plannedMinutes, plannedMinutes) || other.plannedMinutes == plannedMinutes)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FocusSessionSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.plannedMinutes, plannedMinutes) || other.plannedMinutes == plannedMinutes)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,plannedMinutes,elapsedMinutes,isPaused,startedAt);
+int get hashCode => Object.hash(runtimeType,id,plannedMinutes,elapsedMinutes,isPaused,startedAt,status,endedAt);
 
 @override
 String toString() {
-  return 'FocusSessionSummary(id: $id, plannedMinutes: $plannedMinutes, elapsedMinutes: $elapsedMinutes, isPaused: $isPaused, startedAt: $startedAt)';
+  return 'FocusSessionSummary(id: $id, plannedMinutes: $plannedMinutes, elapsedMinutes: $elapsedMinutes, isPaused: $isPaused, startedAt: $startedAt, status: $status, endedAt: $endedAt)';
 }
 
 
@@ -338,7 +338,7 @@ abstract mixin class $FocusSessionSummaryCopyWith<$Res>  {
   factory $FocusSessionSummaryCopyWith(FocusSessionSummary value, $Res Function(FocusSessionSummary) _then) = _$FocusSessionSummaryCopyWithImpl;
 @useResult
 $Res call({
- String id, int plannedMinutes, int elapsedMinutes, bool isPaused, DateTime startedAt
+ String id, int plannedMinutes, int elapsedMinutes, bool isPaused, DateTime startedAt, FocusSessionStatus status, DateTime? endedAt
 });
 
 
@@ -355,14 +355,16 @@ class _$FocusSessionSummaryCopyWithImpl<$Res>
 
 /// Create a copy of FocusSessionSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? plannedMinutes = null,Object? elapsedMinutes = null,Object? isPaused = null,Object? startedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? plannedMinutes = null,Object? elapsedMinutes = null,Object? isPaused = null,Object? startedAt = null,Object? status = null,Object? endedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,plannedMinutes: null == plannedMinutes ? _self.plannedMinutes : plannedMinutes // ignore: cast_nullable_to_non_nullable
 as int,elapsedMinutes: null == elapsedMinutes ? _self.elapsedMinutes : elapsedMinutes // ignore: cast_nullable_to_non_nullable
 as int,isPaused: null == isPaused ? _self.isPaused : isPaused // ignore: cast_nullable_to_non_nullable
 as bool,startedAt: null == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as FocusSessionStatus,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -447,10 +449,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt,  FocusSessionStatus status,  DateTime? endedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FocusSessionSummary() when $default != null:
-return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt);case _:
+return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt,_that.status,_that.endedAt);case _:
   return orElse();
 
 }
@@ -468,10 +470,10 @@ return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPause
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt,  FocusSessionStatus status,  DateTime? endedAt)  $default,) {final _that = this;
 switch (_that) {
 case _FocusSessionSummary():
-return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt);case _:
+return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt,_that.status,_that.endedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -488,10 +490,10 @@ return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPause
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int plannedMinutes,  int elapsedMinutes,  bool isPaused,  DateTime startedAt,  FocusSessionStatus status,  DateTime? endedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _FocusSessionSummary() when $default != null:
-return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt);case _:
+return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPaused,_that.startedAt,_that.status,_that.endedAt);case _:
   return null;
 
 }
@@ -503,7 +505,7 @@ return $default(_that.id,_that.plannedMinutes,_that.elapsedMinutes,_that.isPause
 
 
 class _FocusSessionSummary implements FocusSessionSummary {
-  const _FocusSessionSummary({required this.id, required this.plannedMinutes, required this.elapsedMinutes, required this.isPaused, required this.startedAt});
+  const _FocusSessionSummary({required this.id, required this.plannedMinutes, required this.elapsedMinutes, required this.isPaused, required this.startedAt, required this.status, this.endedAt});
   
 
 @override final  String id;
@@ -511,6 +513,8 @@ class _FocusSessionSummary implements FocusSessionSummary {
 @override final  int elapsedMinutes;
 @override final  bool isPaused;
 @override final  DateTime startedAt;
+@override final  FocusSessionStatus status;
+@override final  DateTime? endedAt;
 
 /// Create a copy of FocusSessionSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -522,16 +526,16 @@ _$FocusSessionSummaryCopyWith<_FocusSessionSummary> get copyWith => __$FocusSess
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusSessionSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.plannedMinutes, plannedMinutes) || other.plannedMinutes == plannedMinutes)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FocusSessionSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.plannedMinutes, plannedMinutes) || other.plannedMinutes == plannedMinutes)&&(identical(other.elapsedMinutes, elapsedMinutes) || other.elapsedMinutes == elapsedMinutes)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,plannedMinutes,elapsedMinutes,isPaused,startedAt);
+int get hashCode => Object.hash(runtimeType,id,plannedMinutes,elapsedMinutes,isPaused,startedAt,status,endedAt);
 
 @override
 String toString() {
-  return 'FocusSessionSummary(id: $id, plannedMinutes: $plannedMinutes, elapsedMinutes: $elapsedMinutes, isPaused: $isPaused, startedAt: $startedAt)';
+  return 'FocusSessionSummary(id: $id, plannedMinutes: $plannedMinutes, elapsedMinutes: $elapsedMinutes, isPaused: $isPaused, startedAt: $startedAt, status: $status, endedAt: $endedAt)';
 }
 
 
@@ -542,7 +546,7 @@ abstract mixin class _$FocusSessionSummaryCopyWith<$Res> implements $FocusSessio
   factory _$FocusSessionSummaryCopyWith(_FocusSessionSummary value, $Res Function(_FocusSessionSummary) _then) = __$FocusSessionSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int plannedMinutes, int elapsedMinutes, bool isPaused, DateTime startedAt
+ String id, int plannedMinutes, int elapsedMinutes, bool isPaused, DateTime startedAt, FocusSessionStatus status, DateTime? endedAt
 });
 
 
@@ -559,14 +563,16 @@ class __$FocusSessionSummaryCopyWithImpl<$Res>
 
 /// Create a copy of FocusSessionSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? plannedMinutes = null,Object? elapsedMinutes = null,Object? isPaused = null,Object? startedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? plannedMinutes = null,Object? elapsedMinutes = null,Object? isPaused = null,Object? startedAt = null,Object? status = null,Object? endedAt = freezed,}) {
   return _then(_FocusSessionSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,plannedMinutes: null == plannedMinutes ? _self.plannedMinutes : plannedMinutes // ignore: cast_nullable_to_non_nullable
 as int,elapsedMinutes: null == elapsedMinutes ? _self.elapsedMinutes : elapsedMinutes // ignore: cast_nullable_to_non_nullable
 as int,isPaused: null == isPaused ? _self.isPaused : isPaused // ignore: cast_nullable_to_non_nullable
 as bool,startedAt: null == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as FocusSessionStatus,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

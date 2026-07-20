@@ -28,5 +28,7 @@ abstract class FocusSessionSummary with _$FocusSessionSummary {
     required int elapsedMinutes,
     required bool isPaused,
     required DateTime startedAt,
+    required FocusSessionStatus status,
+    DateTime? endedAt,
   }) = _FocusSessionSummary;
 }

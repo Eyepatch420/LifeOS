@@ -40,6 +40,17 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
   /// understood today — unrecognized payloads are ignored rather than
   /// throwing, since a stale/foreign payload should never crash navigation.
   ///
+  /// Always routes to the Focus Overview (never directly to
+  /// `focusSessionDetail`): a background-completion notification fires from
+  /// an OS-scheduled alarm with no live app process to check "did this
+  /// session actually complete yet, or is it a stale/cancelled alarm" —
+  /// only `FocusController.build()`'s own `reconcileActiveSession()` call
+  /// (which runs as soon as Focus mounts) is the authoritative check.
+  /// Landing on Focus lets that reconciliation happen naturally: an
+  /// already-completed session shows as history the user can tap into,
+  /// exactly like the `Otherwise route to Focus Overview` fallback this
+  /// feature's spec calls for.
+  ///
   /// Uses `pushNamed` (not `goNamed`/`go`) so Focus lands on top of
   /// whatever's already on the root navigator's stack instead of replacing
   /// it — Home (or wherever the user was) stays underneath, so Back from

@@ -89,6 +89,7 @@ flutter:
     - assets/svg/home/
     - assets/svg/reminders/
     - assets/lottie/
+    - assets/backgrounds/
     # NOTE: assets/svg/{health,finance,documents,common,avatars,illustrations}/
     # and assets/rive/ are scaffolded folders reserved for future modules — Flutter's
     # asset bundler errors on empty directories, so they're added to this list only once

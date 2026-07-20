@@ -247,4 +247,34 @@ void main() {
       expect(day2.map((s) => s.id), ['f2']);
     },
   );
+
+  test('watchById returns the session by id, and null once no matching row '
+      'exists', () async {
+    await repository.startSession(id: 'f1', plannedMinutes: 25);
+
+    final found = await repository.watchById('f1').first;
+    expect(found?.id, 'f1');
+
+    final missing = await repository.watchById('does-not-exist').first;
+    expect(missing, isNull);
+  });
+
+  test(
+    'reconcileActiveSession called twice in a row for the same naturally '
+    'elapsed session only completes it once (idempotent against repeated '
+    'ticker-driven calls)',
+    () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      clock.advance(const Duration(minutes: 26));
+
+      await repository.reconcileActiveSession();
+      await repository.reconcileActiveSession();
+
+      await pumpEventQueue();
+      expect(events.whereType<FocusSessionCompleted>(), hasLength(1));
+      final all = await repository.watchAll().first;
+      expect(all, hasLength(1));
+      expect(all.single.status, FocusSessionStatus.completed);
+    },
+  );
 }

@@ -30,6 +30,12 @@ class FocusSessionsDao extends DatabaseAccessor<AppDatabase>
     )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
+  Stream<FocusSession?> watchById(String id) {
+    return (select(
+      focusSessions,
+    )..where((t) => t.id.equals(id))).watchSingleOrNull();
+  }
+
   Future<void> upsert(FocusSessionsCompanion entry) =>
       into(focusSessions).insertOnConflictUpdate(entry);
 

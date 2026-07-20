@@ -37,15 +37,35 @@ void main() {
   }
 
   test(
-    'still-mock-backed section AsyncNotifiers resolve to their expected mock list',
+    'quickActionsProvider resolves to its expected mock list (still '
+    'mock-backed)',
     () async {
       final container = makeContainer();
 
-      expect(
-        await container.read(overviewStatsProvider.future),
-        kOverviewStats,
-      );
       expect(await container.read(quickActionsProvider.future), kQuickActions);
+    },
+  );
+
+  test(
+    'overviewStatsProvider resolves Tasks/Habits/Mood from the mock list '
+    'unchanged, and Focus from the real (Phase 8) focusDashboardProvider '
+    'instead of the mock value',
+    () async {
+      final container = _makeDbBackedContainer();
+
+      final stats = await container.read(overviewStatsProvider.future);
+      final mockNonFocus = kOverviewStats.where((s) => s.label != 'Focus');
+      for (final mock in mockNonFocus) {
+        expect(
+          stats.firstWhere((s) => s.label == mock.label).value,
+          mock.value,
+        );
+      }
+      // With no Focus sessions in the DB-backed container, today's total is
+      // 0m — not the mock's hardcoded "2h 15m" — proving this is now a real
+      // value, not the Module-2 mock.
+      final focusStat = stats.firstWhere((s) => s.label == 'Focus');
+      expect(focusStat.value, '0m');
     },
   );
 

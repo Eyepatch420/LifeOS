@@ -47,6 +47,14 @@ class FocusRepository {
     return _dao.watchActive().map((row) => row == null ? null : _toEntity(row));
   }
 
+  /// A single session by id, live — used by the session-details screen so
+  /// it always reflects the authoritative persisted record (survives
+  /// process recreation/deep navigation) rather than a value passed through
+  /// navigation.
+  Stream<FocusSession?> watchById(String id) {
+    return _dao.watchById(id).map((row) => row == null ? null : _toEntity(row));
+  }
+
   Stream<List<FocusSession>> watchSessionsForDate(DateTime date) {
     return watchAll().map(
       (sessions) => [
@@ -197,8 +205,7 @@ class FocusRepository {
     if (row == null || row.status != 'running') return;
     final session = _toEntity(row);
     final now = _clock.now();
-    if (session.hasNaturallyCompletedAt(now) ||
-        now.isAfter(session.projectedEndAt())) {
+    if (session.hasNaturallyCompletedAt(now)) {
       await completeSession(row.id);
     }
   }
