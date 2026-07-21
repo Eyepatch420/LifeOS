@@ -70,6 +70,20 @@ abstract final class RoutePaths {
   static const String calendar = 'calendar';
   static const String newEvent = 'calendar/new';
   static const String eventDetail = 'calendar/:eventId';
+
+  // Health workspace — nested under the Health branch's own `/health`
+  // route, the same "one shell, N tab-select redirects + static-before-
+  // dynamic CRUD children" pattern Habits/Calendar use under `/reminders`.
+  // `mood`/`logMood`/`medications`/`newMedication` are declared as siblings
+  // before the dynamic `:moodId`/`:medicationId` children for the same
+  // static-before-dynamic reason as Habits/Calendar above.
+  static const String mood = 'mood';
+  static const String logMood = 'mood/new';
+  static const String moodHistory = 'mood/history';
+  static const String moodDetail = 'mood/:moodId';
+  static const String medications = 'medications';
+  static const String newMedication = 'medications/new';
+  static const String medicationDetail = 'medications/:medicationId';
 }
 
 abstract final class RouteNames {
@@ -106,4 +120,11 @@ abstract final class RouteNames {
   static const String calendar = 'calendar';
   static const String newEvent = 'newEvent';
   static const String eventDetail = 'eventDetail';
+  static const String mood = 'mood';
+  static const String logMood = 'logMood';
+  static const String moodHistory = 'moodHistory';
+  static const String moodDetail = 'moodDetail';
+  static const String medications = 'medications';
+  static const String newMedication = 'newMedication';
+  static const String medicationDetail = 'medicationDetail';
 }

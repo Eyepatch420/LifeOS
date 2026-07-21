@@ -15,11 +15,17 @@ import 'package:lifeos/features/focus/presentation/screens/focus_session_detail_
 import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
-import 'package:lifeos/features/health/presentation/screens/health_placeholder_screen.dart';
+import 'package:lifeos/features/health/presentation/providers/health_workspace_section_provider.dart';
+import 'package:lifeos/features/health/presentation/widgets/health_workspace_scaffold.dart';
 import 'package:lifeos/features/home/presentation/screens/home_screen.dart';
 import 'package:lifeos/features/home/presentation/screens/timeline_detail_screen.dart';
 import 'package:lifeos/features/lists/presentation/screens/list_detail_screen.dart';
 import 'package:lifeos/features/lists/presentation/screens/lists_screen.dart';
+import 'package:lifeos/features/medications/presentation/screens/medication_detail_screen.dart';
+import 'package:lifeos/features/medications/presentation/screens/medications_dashboard_screen.dart';
+import 'package:lifeos/features/medications/presentation/screens/new_medication_screen.dart';
+import 'package:lifeos/features/mood/presentation/screens/log_mood_screen.dart';
+import 'package:lifeos/features/mood/presentation/screens/mood_dashboard_screen.dart';
 import 'package:lifeos/features/navigation/presentation/shell/app_shell.dart';
 import 'package:lifeos/features/notes/presentation/screens/new_note_screen.dart';
 import 'package:lifeos/features/notes/presentation/screens/note_detail_screen.dart';
@@ -412,7 +418,76 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: RoutePaths.health,
                 name: RouteNames.health,
-                builder: (context, state) => const HealthPlaceholderScreen(),
+                builder: (context, state) => const HealthWorkspaceScaffold(
+                  moodBody: MoodDashboardScreen(),
+                  medicationsBody: MedicationsDashboardScreen(),
+                ),
+                routes: [
+                  // Static children declared before the dynamic
+                  // `:moodId`/`:medicationId` children below — same
+                  // static-before-dynamic reason as Habits/Calendar under
+                  // `/reminders`.
+                  GoRoute(
+                    path: RoutePaths.mood,
+                    name: RouteNames.mood,
+                    // No pageBuilder: selecting the Mood tab is local
+                    // workspace state (see health_workspace_scaffold.dart +
+                    // healthWorkspaceSectionProvider), not a pushed page —
+                    // mirrors the `habits`/`calendar` tab routes under
+                    // `/reminders`.
+                    redirect: (context, state) {
+                      Future.microtask(
+                        () => ref
+                            .read(healthWorkspaceSectionProvider.notifier)
+                            .select(HealthWorkspaceSection.mood),
+                      );
+                      return RoutePaths.health;
+                    },
+                  ),
+                  GoRoute(
+                    path: RoutePaths.logMood,
+                    name: RouteNames.logMood,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const LogMoodScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.medications,
+                    name: RouteNames.medications,
+                    // See the `mood` route above for why this is
+                    // redirect-only and defers its provider write.
+                    redirect: (context, state) {
+                      Future.microtask(
+                        () => ref
+                            .read(healthWorkspaceSectionProvider.notifier)
+                            .select(HealthWorkspaceSection.medications),
+                      );
+                      return RoutePaths.health;
+                    },
+                  ),
+                  GoRoute(
+                    path: RoutePaths.newMedication,
+                    name: RouteNames.newMedication,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const NewMedicationScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.medicationDetail,
+                    name: RouteNames.medicationDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: MedicationDetailScreen(
+                        medicationId: state.pathParameters['medicationId']!,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

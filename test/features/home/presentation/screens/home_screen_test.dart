@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/core/services/clock_manager.dart';
 import 'package:lifeos/features/home/domain/models/home_section_config.dart';
 import 'package:lifeos/features/home/presentation/providers/home_providers.dart';
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
@@ -45,6 +46,15 @@ class _FakeSecureStorage extends FlutterSecureStorage {
   }) async {}
 }
 
+class _FakeClock implements ClockManager {
+  _FakeClock(this._now);
+
+  final DateTime _now;
+
+  @override
+  DateTime now() => _now;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -76,6 +86,9 @@ void main() {
             SecureStorageService(const _FakeSecureStorage({})),
           ),
           databaseProvider.overrideWithValue(db),
+          clockManagerProvider.overrideWithValue(
+            _FakeClock(DateTime(2026, 1, 1, 9)),
+          ),
           if (sectionsOverride != null)
             homeSectionsProvider.overrideWith(sectionsOverride),
         ],

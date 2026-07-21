@@ -11,6 +11,7 @@ import 'package:lifeos/features/home/domain/models/home_section_config.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/home/presentation/providers/home_section_registry.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_provider.dart';
+import 'package:lifeos/features/mood/presentation/providers/mood_dashboard_provider.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
 
 /// Each Home section's data is an `AsyncNotifier<List<T>>`, not a plain
@@ -22,13 +23,13 @@ import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_pro
 /// `build()` body change, no call-site changes anywhere (see
 /// docs/architecture.md).
 ///
-/// The "Focus" tile is the first of the 4 overview stats backed by a real
-/// feature (Phase 8) — sourced from [focusDashboardProvider], never
-/// `FocusRepository`/`FocusSession` (Golden Rule). Tasks/Habits/Mood stay
-/// [kOverviewStats] mocks until their own phases wire them up the same way.
-/// `onTap` is deliberately left `null` here (not set to a route push) since
-/// this notifier has no `BuildContext`/router access — `onTap` is wired at
-/// the render site instead, see `home_section_registry.dart`'s
+/// The "Focus" and "Mood" tiles are backed by real features (Phase 7/8) —
+/// sourced from [focusDashboardProvider]/[moodDashboardProvider], never
+/// `FocusRepository`/`MoodRepository` directly (Golden Rule). Tasks/Habits
+/// stay [kOverviewStats] mocks until their own phases wire them up the same
+/// way. `onTap` is deliberately left `null` here (not set to a route push)
+/// since this notifier has no `BuildContext`/router access — `onTap` is
+/// wired at the render site instead, see `home_section_registry.dart`'s
 /// `buildHomeSectionBuilders`, matching `QuickActionsRow.onActionTap`'s
 /// existing pattern of keeping navigation at the widget layer.
 class OverviewStatsNotifier extends AsyncNotifier<List<OverviewStat>> {
@@ -39,10 +40,21 @@ class OverviewStatsNotifier extends AsyncNotifier<List<OverviewStat>> {
     final minutes = focusSummary.todayFocusedDuration.inMinutes.remainder(60);
     final focusValue = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
 
+    final moodSummary = await ref.watch(moodDashboardProvider.future);
+    final todayLevel = moodSummary.todayLevelLabel;
+    final moodValue = todayLevel ?? '—';
+    final moodSubtitle = todayLevel == null
+        ? 'Log how you feel'
+        : moodSummary.todayEntryCount > 1
+        ? '${moodSummary.todayEntryCount} entries today'
+        : 'Today';
+
     return [
       for (final stat in kOverviewStats)
         if (stat.label == 'Focus')
           stat.copyWith(value: focusValue, subtitle: 'Today')
+        else if (stat.label == 'Mood')
+          stat.copyWith(value: moodValue, subtitle: moodSubtitle)
         else
           stat,
     ];

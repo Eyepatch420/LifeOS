@@ -1,4 +1,6 @@
 import 'package:lifeos/core/events/domain_event.dart';
+import 'package:lifeos/core/services/notification_scheduler.dart'
+    show AppNotificationChannel;
 
 /// A Type A feature's contribution to the notification pipeline. Mirrors
 /// [SearchContributor]/[AgendaContributor]'s shape deliberately: the
@@ -48,6 +50,7 @@ class ScheduleNotification extends NotificationIntent {
     required this.title,
     required this.body,
     this.payload,
+    this.channel = AppNotificationChannel.reminders,
   });
 
   final DateTime when;
@@ -59,6 +62,10 @@ class ScheduleNotification extends NotificationIntent {
   /// so a tap can be routed to a specific destination. `null` for
   /// contributors with nothing to deep-link to (a tap just opens the app).
   final String? payload;
+
+  /// Which Android channel this posts to — defaults to [reminders] so
+  /// every pre-existing contributor needs no change.
+  final AppNotificationChannel channel;
 }
 
 class CancelNotification extends NotificationIntent {

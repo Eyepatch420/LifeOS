@@ -9,6 +9,7 @@ import 'package:lifeos/core/notifications/notification_engine_provider.dart';
 import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
 import 'package:lifeos/features/focus/data/focus_dnd_coordinator_provider.dart';
 import 'package:lifeos/features/focus/presentation/providers/focus_dashboard_provider.dart';
+import 'package:lifeos/features/medications/presentation/providers/medications_dashboard_provider.dart';
 import 'package:lifeos/theme/app_theme.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
@@ -62,6 +63,18 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
           .reconcileNotificationsOnStartup()
           .catchError((_) {}),
     );
+    // Re-asserts every active medication's schedule onto the notification
+    // pipeline so a normal restart/reopen never lets persisted schedules
+    // and OS-owned notification state silently diverge — see
+    // MedicationsRepository.reconcileNotificationsOnStartup's doc comment.
+    // Idempotent by construction (same posture as Focus's call above), so
+    // this never blindly recreates notifications, it just re-confirms them.
+    unawaited(
+      ref
+          .read(medicationsRepositoryProvider)
+          .reconcileNotificationsOnStartup()
+          .catchError((_) {}),
+    );
   }
 
   @override
@@ -89,6 +102,11 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
   /// Focus, there's no reconciliation step a Reminder destination needs to
   /// run first.
   ///
+  /// `medication:` routes straight to that medication's detail screen for
+  /// the same reason `reminder:` does — a fired dose notification is
+  /// simply a fact (the schedule said this time was due), not something
+  /// that needs runtime reconciliation before it's safe to display.
+  ///
   /// Both use `pushNamed` (not `goNamed`/`go`) so the destination lands on
   /// top of whatever's already on the root navigator's stack instead of
   /// replacing it — Home (or wherever the user was) stays underneath, so
@@ -108,6 +126,11 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
         router.pushNamed(
           RouteNames.reminderDetail,
           pathParameters: {'reminderId': id},
+        );
+      case 'medication':
+        router.pushNamed(
+          RouteNames.medicationDetail,
+          pathParameters: {'medicationId': id},
         );
     }
   }

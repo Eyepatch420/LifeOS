@@ -38,6 +38,7 @@ class _FakeScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? payload,
+    AppNotificationChannel channel = AppNotificationChannel.reminders,
   }) async {
     scheduled.add(id);
   }

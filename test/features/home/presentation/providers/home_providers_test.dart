@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/core/services/clock_manager.dart';
 import 'package:lifeos/features/calendar/presentation/providers/calendar_dashboard_provider.dart';
 import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
@@ -14,6 +15,15 @@ import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_pro
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 
+class _FakeClock implements ClockManager {
+  _FakeClock(this._now);
+
+  final DateTime _now;
+
+  @override
+  DateTime now() => _now;
+}
+
 ProviderContainer _makeDbBackedContainer() {
   final db = AppDatabase.forTesting(
     DatabaseConnection(
@@ -22,7 +32,12 @@ ProviderContainer _makeDbBackedContainer() {
     ),
   );
   final container = ProviderContainer(
-    overrides: [databaseProvider.overrideWithValue(db)],
+    overrides: [
+      databaseProvider.overrideWithValue(db),
+      clockManagerProvider.overrideWithValue(
+        _FakeClock(DateTime(2026, 1, 1, 9)),
+      ),
+    ],
   );
   addTearDown(container.dispose);
   addTearDown(db.close);
@@ -36,38 +51,42 @@ void main() {
     return container;
   }
 
-  test(
-    'quickActionsProvider resolves to its expected mock list (still '
-    'mock-backed)',
-    () async {
-      final container = makeContainer();
+  test('quickActionsProvider resolves to its expected mock list (still '
+      'mock-backed)', () async {
+    final container = makeContainer();
 
-      expect(await container.read(quickActionsProvider.future), kQuickActions);
-    },
-  );
+    expect(await container.read(quickActionsProvider.future), kQuickActions);
+  });
 
-  test(
-    'overviewStatsProvider resolves Tasks/Habits/Mood from the mock list '
-    'unchanged, and Focus from the real (Phase 8) focusDashboardProvider '
-    'instead of the mock value',
-    () async {
-      final container = _makeDbBackedContainer();
+  test('overviewStatsProvider resolves Tasks/Habits from the mock list '
+      'unchanged, and Focus/Mood from their real (Phase 7/8) dashboard '
+      'providers instead of the mock value', () async {
+    final container = _makeDbBackedContainer();
+    // A live listener before the `.future` read — a bare `.future`/`.first`
+    // read with no listener already held open can stall on a Drift query
+    // stream (the same gotcha `new_habit_screen_test.dart`'s `currentHabits`
+    // doc comment and `focus_dashboard_provider_test.dart` both document).
+    final sub = container.listen(overviewStatsProvider, (_, _) {});
+    addTearDown(sub.close);
 
-      final stats = await container.read(overviewStatsProvider.future);
-      final mockNonFocus = kOverviewStats.where((s) => s.label != 'Focus');
-      for (final mock in mockNonFocus) {
-        expect(
-          stats.firstWhere((s) => s.label == mock.label).value,
-          mock.value,
-        );
-      }
-      // With no Focus sessions in the DB-backed container, today's total is
-      // 0m — not the mock's hardcoded "2h 15m" — proving this is now a real
-      // value, not the Module-2 mock.
-      final focusStat = stats.firstWhere((s) => s.label == 'Focus');
-      expect(focusStat.value, '0m');
-    },
-  );
+    final stats = await container.read(overviewStatsProvider.future);
+    final mockUnwired = kOverviewStats.where(
+      (s) => s.label != 'Focus' && s.label != 'Mood',
+    );
+    for (final mock in mockUnwired) {
+      expect(stats.firstWhere((s) => s.label == mock.label).value, mock.value);
+    }
+    // With no Focus sessions in the DB-backed container, today's total is
+    // 0m — not the mock's hardcoded "2h 15m" — proving this is now a real
+    // value, not the Module-2 mock.
+    final focusStat = stats.firstWhere((s) => s.label == 'Focus');
+    expect(focusStat.value, '0m');
+    // With no Mood entries in the DB-backed container, today's value is
+    // the honest empty-state dash — not the mock's hardcoded 'Good'.
+    final moodStat = stats.firstWhere((s) => s.label == 'Mood');
+    expect(moodStat.value, '—');
+    expect(moodStat.subtitle, 'Log how you feel');
+  });
 
   test('upNextProvider is a thin watch of agendaEntriesProvider (Reminders + '
       'Calendar merged) — no longer mock-backed as of Phase 7', () async {

@@ -3,6 +3,7 @@ import 'package:lifeos/features/calendar/presentation/providers/calendar_notific
 import 'package:lifeos/features/focus/presentation/providers/focus_notification_contributor.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_notification_contributor.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_notification_contributor.dart';
+import 'package:lifeos/features/medications/presentation/providers/medications_notification_contributor.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_notification_contributor.dart';
 import 'package:lifeos/features/notifications/domain/notification_contributor.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_notification_contributor.dart';
@@ -21,5 +22,6 @@ List<NotificationContributor> notificationContributors(Ref ref) {
     const HabitsNotificationContributor(),
     const CalendarNotificationContributor(),
     const FocusNotificationContributor(),
+    const MedicationsNotificationContributor(),
   ];
 }

@@ -60,6 +60,7 @@ const List<QuickAction> kQuickActions = [
     icon: Icons.document_scanner_outlined,
     label: 'New Document',
   ),
+  QuickAction(id: 'log_mood', icon: Icons.mood_rounded, label: 'Log Mood'),
 ];
 
 const List<NoteSummary> kRecentNotes = [

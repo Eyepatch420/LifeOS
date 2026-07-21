@@ -5,6 +5,14 @@ import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+/// Which Android notification channel a [NotificationScheduler.scheduleAt]
+/// call posts to. Android locks a channel's sound/importance at creation
+/// time, so each distinct alert profile needs its own channel id rather
+/// than a mutable per-call config — see `LocalNotificationScheduler`'s
+/// channel-migration doc comment. Defaults to [reminders] everywhere so
+/// every pre-existing call site (Reminders, Focus) needs no change.
+enum AppNotificationChannel { reminders, medicationReminders }
+
 /// Reserved seam for scheduling OS-level (system) notifications. See
 /// docs/background_services_plan.md for the full background-work
 /// architecture this sits in
@@ -18,6 +26,7 @@ abstract interface class NotificationScheduler {
     required String title,
     required String body,
     String? payload,
+    AppNotificationChannel channel = AppNotificationChannel.reminders,
   });
 
   Future<void> cancel(String id);
@@ -64,6 +73,7 @@ class NoopNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? payload,
+    AppNotificationChannel channel = AppNotificationChannel.reminders,
   }) async {}
 
   @override
@@ -122,6 +132,16 @@ class LocalNotificationScheduler implements NotificationScheduler {
   static const _ongoingChannelName = 'Focus session in progress';
   static const _ongoingChannelDescription =
       'Shows the live countdown while a Focus session is running';
+
+  // Medication dose reminders are time-critical like Reminders (high
+  // importance), but deliberately do not reuse `reminders_v2`'s loud custom
+  // alarm sound — a dedicated channel lets a user tune Medication alerts
+  // independently of Reminders in system settings, and defaults to
+  // Android's own default notification sound rather than an alarm-style one.
+  static const _medicationChannelId = 'medication_reminders';
+  static const _medicationChannelName = 'Medication reminders';
+  static const _medicationChannelDescription =
+      'Scheduled medication dose reminders from LifeOS';
 
   /// Must be called once, before the first [scheduleAt]/[cancel] call —
   /// initializes the plugin and the `timezone` database, registers the
@@ -195,6 +215,14 @@ class LocalNotificationScheduler implements NotificationScheduler {
         enableVibration: false,
       ),
     );
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _medicationChannelId,
+        _medicationChannelName,
+        description: _medicationChannelDescription,
+        importance: Importance.high,
+      ),
+    );
   }
 
   /// Reads whatever notification (if any) cold-launched the app and
@@ -220,17 +248,29 @@ class LocalNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     String? payload,
+    AppNotificationChannel channel = AppNotificationChannel.reminders,
   }) async {
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _channelId,
-        _channelName,
-        channelDescription: _channelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
-        sound: _channelSound,
+    final details = switch (channel) {
+      AppNotificationChannel.reminders => NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          sound: _channelSound,
+        ),
       ),
-    );
+      AppNotificationChannel.medicationReminders => NotificationDetails(
+        android: AndroidNotificationDetails(
+          _medicationChannelId,
+          _medicationChannelName,
+          channelDescription: _medicationChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      ),
+    };
     final when_ = tz.TZDateTime.from(when, tz.local);
 
     try {

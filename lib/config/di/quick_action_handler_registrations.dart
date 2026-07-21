@@ -19,6 +19,7 @@ Map<String, void Function(BuildContext context)> quickActionHandlers(Ref ref) {
     'new_reminder': (context) => context.pushNamed(RouteNames.newReminder),
     'new_expense': (context) => context.pushNamed(RouteNames.newExpense),
     'new_habit': (context) => context.pushNamed(RouteNames.newHabit),
+    'log_mood': (context) => context.pushNamed(RouteNames.logMood),
   };
 }
 

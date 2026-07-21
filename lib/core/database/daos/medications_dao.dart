@@ -72,7 +72,9 @@ class MedicationsDao extends DatabaseAccessor<AppDatabase>
     DateTime to,
   ) {
     return (select(medicationOccurrences)..where(
-          (t) => t.scheduledFor.isBiggerOrEqualValue(from) & t.scheduledFor.isSmallerThanValue(to),
+          (t) =>
+              t.scheduledFor.isBiggerOrEqualValue(from) &
+              t.scheduledFor.isSmallerThanValue(to),
         ))
         .get();
   }

@@ -6,6 +6,8 @@ import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_p
 import 'package:lifeos/features/habits/presentation/providers/habits_search_contributor.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_dashboard_provider.dart';
 import 'package:lifeos/features/lists/presentation/providers/lists_search_contributor.dart';
+import 'package:lifeos/features/medications/presentation/providers/medications_dashboard_provider.dart';
+import 'package:lifeos/features/medications/presentation/providers/medications_search_contributor.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_dashboard_provider.dart';
 import 'package:lifeos/features/notes/presentation/providers/notes_search_contributor.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
@@ -24,5 +26,6 @@ List<SearchContributor> searchContributors(Ref ref) {
     HabitsSearchContributor(ref.watch(habitsRepositoryProvider)),
     CalendarSearchContributor(ref.watch(eventsRepositoryProvider)),
     const FocusSearchContributor(),
+    MedicationsSearchContributor(ref.watch(medicationsRepositoryProvider)),
   ];
 }
