@@ -8,6 +8,7 @@ import 'package:lifeos/core/animations/durations.dart';
 import 'package:lifeos/core/notifications/notification_engine_provider.dart';
 import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
 import 'package:lifeos/features/focus/data/focus_dnd_coordinator_provider.dart';
+import 'package:lifeos/features/focus/presentation/providers/focus_dashboard_provider.dart';
 import 'package:lifeos/theme/app_theme.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
@@ -29,12 +30,38 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
     // `notification_tap_dispatcher.dart`'s doc comment for how each is
     // funneled into this same stream.
     _tapSubscription = notificationTapDispatcher.taps.listen(_handleTap);
+    // Must exist *before* the reconciliation calls below emit anything —
+    // `EventBus` is a broadcast stream that drops events with no listener,
+    // and `NotificationEngine`'s subscription is what actually turns a
+    // reconciliation event into a re-shown notification. Normally started
+    // from `build()` (see the `ref.watch` there), but that runs one frame
+    // after `initState`, which is too late for a startup-only emit.
+    ref.read(notificationEngineProvider);
     // If the app was killed/crashed mid-Focus-session with DND active,
     // this is what actually turns it back off — see
     // FocusDndCoordinator.reconcileOnStartup's doc comment. Independent of
     // FocusController's own reconciliation (that's about session state,
     // this is about a stuck system side effect).
     ref.read(focusDndCoordinatorProvider).reconcileOnStartup();
+    // Restores the ongoing Focus notification for a session that's still
+    // running after a kill+reopen — see
+    // FocusRepository.reconcileNotificationsOnStartup's doc comment. Reads
+    // (not watches) the repository: this is a one-shot startup action, not
+    // a subscription, and FocusController still owns reconciling the
+    // in-app session state itself whenever it (re)builds.
+    //
+    // Fire-and-forget from initState with no BuildContext/widget to await
+    // it, so a teardown that outraces this Future (the underlying DB/stream
+    // closing, in practice only observed in fast widget-test teardown) must
+    // not surface as an unhandled async error — this is a best-effort
+    // startup side effect, same posture as FocusDndCoordinator's own
+    // reconciliation.
+    unawaited(
+      ref
+          .read(focusRepositoryProvider)
+          .reconcileNotificationsOnStartup()
+          .catchError((_) {}),
+    );
   }
 
   @override

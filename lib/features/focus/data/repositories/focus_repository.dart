@@ -210,6 +210,56 @@ class FocusRepository {
     }
   }
 
+  /// Call once at app startup (mirrors [FocusDndCoordinator.reconcileOnStartup]).
+  ///
+  /// A plain [reconcileActiveSession] call only ever *completes* an expired
+  /// session — it emits nothing for a session that's still legitimately
+  /// running, because nothing changed. But the ongoing Focus notification
+  /// and completion alarm are event-driven projections
+  /// ([FocusNotificationContributor]), and no event fires when the app
+  /// process (and with it, the notification tray entry) was killed and
+  /// relaunched mid-session. Without this, a still-running session comes
+  /// back with correct persisted state and a correct in-app timer, but no
+  /// ongoing notification until the user happens to pause/resume.
+  ///
+  /// Re-emitting [FocusSessionResumed] is deliberate rather than inventing a
+  /// new event type: it's the existing "(re)assert the notification/DND
+  /// side effects for a running session with this projected end time" event,
+  /// already idempotent by construction —
+  /// [FocusNotificationContributor] reschedules the same alarm id and
+  /// re-shows the same ongoing notification id, and
+  /// [FocusDndCoordinator]'s prior-filter guard already no-ops if a filter
+  /// is already recorded. No new listener, no new state machine.
+  ///
+  /// Does nothing for a paused/completed/cancelled session — a paused
+  /// session's notification is intentionally absent (see
+  /// [FocusNotificationContributor]'s doc comment), and a
+  /// completed/cancelled one has nothing to restore.
+  ///
+  /// Reads the active row exactly once and branches on it locally (rather
+  /// than delegating to [reconcileActiveSession] and then re-querying) —
+  /// issuing a second, independent query against the same connection
+  /// immediately after a `.watch().first` subscription deadlocked in a
+  /// `flutter_test` host during Phase 7.6's investigation (reproduced in
+  /// isolation, unrelated to Riverpod/widget state); a single query read
+  /// sidesteps it entirely and is simpler besides.
+  Future<void> reconcileNotificationsOnStartup() async {
+    final row = await _dao.watchActive().first;
+    if (row == null || row.status != 'running') return;
+    final session = _toEntity(row);
+    final now = _clock.now();
+    if (session.hasNaturallyCompletedAt(now)) {
+      await completeSession(row.id);
+      return;
+    }
+    _eventBus.emit(
+      FocusSessionResumed(
+        sessionId: row.id,
+        projectedEndAt: session.projectedEndAt(),
+      ),
+    );
+  }
+
   FocusSession _toEntity(db.FocusSession row) => FocusSession(
     id: row.id,
     startedAt: row.startedAt,

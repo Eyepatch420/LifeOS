@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/app.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/core/services/clock_manager.dart';
 import 'package:lifeos/core/services/notification_scheduler.dart';
 import 'package:lifeos/features/user_setup/domain/models/user_profile.dart';
 import 'package:lifeos/features/user_setup/domain/repositories/user_profile_repository.dart';
@@ -137,6 +138,12 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             const NoopNotificationScheduler(),
           ),
+          // LifeOsApp now also reads focusRepositoryProvider in initState
+          // (Phase 7.6 startup notification reconciliation), which pulls in
+          // clockManagerProvider — override with the real implementation
+          // rather than GetIt, same rationale as the other two overrides
+          // above.
+          clockManagerProvider.overrideWithValue(const SystemClockManager()),
         ],
         child: const LifeOsApp(),
       ),

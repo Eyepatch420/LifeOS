@@ -259,22 +259,98 @@ void main() {
     expect(missing, isNull);
   });
 
-  test(
-    'reconcileActiveSession called twice in a row for the same naturally '
-    'elapsed session only completes it once (idempotent against repeated '
-    'ticker-driven calls)',
-    () async {
-      await repository.startSession(id: 'f1', plannedMinutes: 25);
-      clock.advance(const Duration(minutes: 26));
+  test('reconcileActiveSession called twice in a row for the same naturally '
+      'elapsed session only completes it once (idempotent against repeated '
+      'ticker-driven calls)', () async {
+    await repository.startSession(id: 'f1', plannedMinutes: 25);
+    clock.advance(const Duration(minutes: 26));
 
-      await repository.reconcileActiveSession();
-      await repository.reconcileActiveSession();
+    await repository.reconcileActiveSession();
+    await repository.reconcileActiveSession();
+
+    await pumpEventQueue();
+    expect(events.whereType<FocusSessionCompleted>(), hasLength(1));
+    final all = await repository.watchAll().first;
+    expect(all, hasLength(1));
+    expect(all.single.status, FocusSessionStatus.completed);
+  });
+
+  group('reconcileNotificationsOnStartup', () {
+    test('a still-running session emits FocusSessionResumed with the current '
+        'projected end time, so the notification contributor re-shows the '
+        'ongoing notification and reschedules the completion alarm', () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      events.clear();
+      clock.advance(const Duration(minutes: 10));
+
+      await repository.reconcileNotificationsOnStartup();
 
       await pumpEventQueue();
+      expect(events.whereType<FocusSessionResumed>(), hasLength(1));
+      expect(
+        events.whereType<FocusSessionResumed>().single.projectedEndAt,
+        DateTime(2026, 1, 1, 9).add(const Duration(minutes: 25)),
+      );
+      final active = await repository.watchActiveSession().first;
+      expect(active?.status, FocusSessionStatus.running);
+    });
+
+    test('a session that has naturally expired while the app was dead is '
+        'completed instead of having its notification restored', () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      events.clear();
+      clock.advance(const Duration(minutes: 26));
+
+      await repository.reconcileNotificationsOnStartup();
+
+      await pumpEventQueue();
+      expect(events.whereType<FocusSessionResumed>(), isEmpty);
       expect(events.whereType<FocusSessionCompleted>(), hasLength(1));
-      final all = await repository.watchAll().first;
-      expect(all, hasLength(1));
-      expect(all.single.status, FocusSessionStatus.completed);
-    },
-  );
+      expect(await repository.watchActiveSession().first, isNull);
+    });
+
+    test('a paused session emits nothing — its notification is intentionally '
+        'absent', () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      await repository.pauseSession('f1');
+      await pumpEventQueue();
+      events.clear();
+
+      await repository.reconcileNotificationsOnStartup();
+
+      await pumpEventQueue();
+      expect(events, isEmpty);
+    });
+
+    test('a completed session emits nothing', () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      await repository.completeSession('f1');
+      await pumpEventQueue();
+      events.clear();
+
+      await repository.reconcileNotificationsOnStartup();
+
+      await pumpEventQueue();
+      expect(events, isEmpty);
+    });
+
+    test('a cancelled session emits nothing', () async {
+      await repository.startSession(id: 'f1', plannedMinutes: 25);
+      await repository.cancelSession('f1');
+      await pumpEventQueue();
+      events.clear();
+
+      await repository.reconcileNotificationsOnStartup();
+
+      await pumpEventQueue();
+      expect(events, isEmpty);
+    });
+
+    test('no active session at all emits nothing', () async {
+      await repository.reconcileNotificationsOnStartup();
+
+      await pumpEventQueue();
+      expect(events, isEmpty);
+    });
+  });
 }
