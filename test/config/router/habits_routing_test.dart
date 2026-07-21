@@ -8,13 +8,16 @@ import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
 import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
+import 'package:lifeos/features/reminders/presentation/providers/planning_workspace_section_provider.dart';
 import 'package:lifeos/features/reminders/presentation/screens/planner_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
 import 'package:lifeos/theme/theme_providers.dart';
@@ -89,17 +92,37 @@ void main() {
         GoRoute(
           path: RoutePaths.reminders,
           name: RouteNames.reminders,
-          builder: (context, state) => const RemindersDashboardScreen(),
+          builder: (context, state) => const PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
           routes: [
             GoRoute(
               path: RoutePaths.planner,
               name: RouteNames.planner,
-              builder: (context, state) => const PlannerScreen(),
+              redirect: (context, state) {
+                final scopedContainer = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => scopedContainer
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.planner),
+                );
+                return RoutePaths.reminders;
+              },
             ),
             GoRoute(
               path: RoutePaths.habits,
               name: RouteNames.habits,
-              builder: (context, state) => const HabitsDashboardScreen(),
+              redirect: (context, state) {
+                final scopedContainer = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => scopedContainer
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.habits),
+                );
+                return RoutePaths.reminders;
+              },
             ),
             GoRoute(
               path: RoutePaths.newHabit,
@@ -155,8 +178,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     return container;
   }
 
@@ -168,6 +190,17 @@ void main() {
     (tester.widget(gestureDetector) as GestureDetector).onTap!();
   }
 
+  /// All four workspace tabs stay mounted (keep-alive) inside
+  /// `PlanningWorkspaceScaffold`'s `Visibility(maintainState: true)`
+  /// wrappers, so `find.byType` alone always finds one — this asserts it's
+  /// also the currently selected tab, i.e. its nearest `Visibility`
+  /// ancestor has `visible: true`.
+  bool isSelectedTab(Type type) {
+    final element = find.byType(type).evaluate().single;
+    final visibility = element.findAncestorWidgetOfExactType<Visibility>();
+    return visibility?.visible ?? true;
+  }
+
   testWidgets('/reminders/habits is a static route reached from the '
       'Reminders workspace nav', (tester) async {
     await pumpApp(tester);
@@ -175,7 +208,7 @@ void main() {
     tapWorkspaceNavItem(tester, 'Habits');
     await tester.pumpAndSettle();
 
-    expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+    expect(isSelectedTab(HabitsDashboardScreen), isTrue);
     expect(tester.takeException(), isNull);
   });
 
@@ -185,12 +218,12 @@ void main() {
 
     tapWorkspaceNavItem(tester, 'Habits');
     await tester.pumpAndSettle();
-    expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+    expect(isSelectedTab(HabitsDashboardScreen), isTrue);
 
     tapWorkspaceNavItem(tester, 'Reminders');
     await tester.pumpAndSettle();
 
-    expect(find.byType(RemindersDashboardScreen), findsOneWidget);
+    expect(isSelectedTab(RemindersDashboardScreen), isTrue);
   });
 
   testWidgets(
@@ -242,7 +275,7 @@ void main() {
     navigator.pop();
     await tester.pumpAndSettle();
 
-    expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+    expect(isSelectedTab(HabitsDashboardScreen), isTrue);
   });
 
   testWidgets('Habits Add Habit -> back returns to Habits', (tester) async {
@@ -262,7 +295,7 @@ void main() {
     navigator.pop();
     await tester.pumpAndSettle();
 
-    expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+    expect(isSelectedTab(HabitsDashboardScreen), isTrue);
   });
 
   testWidgets(
@@ -281,7 +314,7 @@ void main() {
       tapWorkspaceNavItem(tester, 'Planner');
       await tester.pumpAndSettle();
 
-      expect(find.byType(PlannerScreen), findsOneWidget);
+      expect(isSelectedTab(PlannerScreen), isTrue);
       expect(find.text('Stretch'), findsOneWidget);
 
       await tester.tap(find.text('Stretch'), warnIfMissed: false);

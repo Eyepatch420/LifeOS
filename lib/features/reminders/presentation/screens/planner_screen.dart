@@ -14,18 +14,18 @@ import 'package:lifeos/features/reminders/presentation/providers/reminders_dashb
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_completion_feedback.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_day_summary.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planner/planner_timeline_item.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/feedback/section_loading_placeholder.dart';
 import 'package:lifeos/shared/widgets/planning/planner_date_strip.dart';
 import 'package:lifeos/shared/widgets/planning/planner_header.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
-/// `/reminders/planner` — a focused single-day planner view over the same
-/// Reminder data Reminders itself owns (see `PlannerItem`'s doc comment on
-/// why this is a projection, not a second data source). Hosted by the same
-/// [PlanningWorkspaceScaffold] as `RemindersDashboardScreen`, so the hero,
-/// workspace nav, sunset SVG, and hit-testing contract are shared, not
+/// The Planner tab of the planning workspace — a focused single-day planner
+/// view over the same Reminder data Reminders itself owns (see
+/// `PlannerItem`'s doc comment on why this is a projection, not a second
+/// data source). Hosted as one of the four bodies switched by
+/// `PlanningWorkspaceScaffold` (`planning_workspace_scaffold.dart`), so the
+/// hero, workspace nav, sunset SVG, and hit-testing contract are shared, not
 /// duplicated.
 class PlannerScreen extends ConsumerWidget {
   const PlannerScreen({super.key});
@@ -37,37 +37,34 @@ class PlannerScreen extends ConsumerWidget {
     final theme = ref.watch(activeWorkspaceThemeProvider);
     final dateNotifier = ref.read(plannerSelectedDateProvider.notifier);
 
-    return PlanningWorkspaceScaffold(
-      activeSection: PlanningWorkspaceSection.planner,
-      content: StaggeredEntrance(
-        children: [
-          PlannerHeader(
+    return StaggeredEntrance(
+      children: [
+        PlannerHeader(
+          selectedDate: selectedDate,
+          onPreviousDay: dateNotifier.previousDay,
+          onNextDay: dateNotifier.nextDay,
+          onToday: dateNotifier.resetToToday,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: PlannerDateStrip(
             selectedDate: selectedDate,
-            onPreviousDay: dateNotifier.previousDay,
-            onNextDay: dateNotifier.nextDay,
-            onToday: dateNotifier.resetToToday,
+            onDateSelected: dateNotifier.selectDate,
+            theme: theme,
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.lg),
-            child: PlannerDateStrip(
-              selectedDate: selectedDate,
-              onDateSelected: dateNotifier.selectDate,
-              theme: theme,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: dayAsync.when(
+            data: (data) =>
+                _PlannerDayContent(data: data, selectedDate: selectedDate),
+            loading: () => const _PlannerLoading(),
+            error: (error, stack) => _PlannerError(
+              onRetry: () => ref.invalidate(plannerDayDataProvider),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.lg),
-            child: dayAsync.when(
-              data: (data) =>
-                  _PlannerDayContent(data: data, selectedDate: selectedDate),
-              loading: () => const _PlannerLoading(),
-              error: (error, stack) => _PlannerError(
-                onRetry: () => ref.invalidate(plannerDayDataProvider),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

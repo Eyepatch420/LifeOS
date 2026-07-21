@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/features/reminders/data/repositories/reminders_repository.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category_label.dart';
 import 'package:lifeos/features/search/domain/models/searchable_entity.dart';
 import 'package:lifeos/features/search/domain/search_contributor.dart';
 
@@ -21,9 +21,10 @@ class RemindersSearchContributor implements SearchContributor {
             id: 'reminder-${reminder.id}',
             title: reminder.title,
             subtitle: reminder.isCompleted
-                ? 'Completed'
-                : 'Due ${reminder.dueAt}',
-            icon: Icons.notifications_active_outlined,
+                ? '${reminderCategoryLabel(reminder.category)} • Completed'
+                : '${reminderCategoryLabel(reminder.category)} • '
+                      'Due ${reminder.dueAt}',
+            icon: reminderCategoryIcon(reminder.category),
             category: SearchableEntityCategory.reminder,
             routeName: RouteNames.reminderDetail,
             pathParameters: {'reminderId': reminder.id},

@@ -10,9 +10,11 @@ import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/providers/planning_workspace_section_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/screens/planner_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
 import 'package:lifeos/theme/theme_providers.dart';
@@ -102,22 +104,50 @@ void main() {
         GoRoute(
           path: RoutePaths.reminders,
           name: RouteNames.reminders,
-          builder: (context, state) => const RemindersDashboardScreen(),
+          builder: (context, state) => const PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
           routes: [
             GoRoute(
               path: RoutePaths.planner,
               name: RouteNames.planner,
-              builder: (context, state) => const PlannerScreen(),
+              redirect: (context, state) {
+                final scopedContainer = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => scopedContainer
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.planner),
+                );
+                return RoutePaths.reminders;
+              },
             ),
             GoRoute(
               path: RoutePaths.habits,
               name: RouteNames.habits,
-              builder: (context, state) => const HabitsDashboardScreen(),
+              redirect: (context, state) {
+                final scopedContainer = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => scopedContainer
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.habits),
+                );
+                return RoutePaths.reminders;
+              },
             ),
             GoRoute(
               path: RoutePaths.calendar,
               name: RouteNames.calendar,
-              builder: (context, state) => const CalendarDashboardScreen(),
+              redirect: (context, state) {
+                final scopedContainer = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => scopedContainer
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.calendar),
+                );
+                return RoutePaths.reminders;
+              },
             ),
           ],
         ),
@@ -162,8 +192,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     return container;
   }
 
@@ -173,6 +202,17 @@ void main() {
   Future<void> tapWorkspacePill(WidgetTester tester, String label) async {
     await tester.tap(findBySemanticsLabel(label));
     await tester.pumpAndSettle();
+  }
+
+  /// All four workspace tabs stay mounted (keep-alive) inside
+  /// `PlanningWorkspaceScaffold`'s `Visibility(maintainState: true)`
+  /// wrappers, so `find.byType` alone always finds one — this asserts it's
+  /// also the currently selected tab, i.e. its nearest `Visibility`
+  /// ancestor has `visible: true`.
+  bool isSelectedTab(Type type) {
+    final element = find.byType(type).evaluate().single;
+    final visibility = element.findAncestorWidgetOfExactType<Visibility>();
+    return visibility?.visible ?? true;
   }
 
   group(
@@ -185,30 +225,30 @@ void main() {
         (tester) async {
           await pumpApp(tester, screenSize: const Size(1080, 2424));
 
-          expect(find.byType(RemindersDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(RemindersDashboardScreen), isTrue);
 
           await tapWorkspacePill(tester, 'Planner');
-          expect(find.byType(PlannerScreen), findsOneWidget);
+          expect(isSelectedTab(PlannerScreen), isTrue);
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Habits');
-          expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(HabitsDashboardScreen), isTrue);
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Calendar');
-          expect(find.byType(CalendarDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(CalendarDashboardScreen), isTrue);
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Habits');
-          expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(HabitsDashboardScreen), isTrue);
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Planner');
-          expect(find.byType(PlannerScreen), findsOneWidget);
+          expect(isSelectedTab(PlannerScreen), isTrue);
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Reminders');
-          expect(find.byType(RemindersDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(RemindersDashboardScreen), isTrue);
           expect(tester.takeException(), isNull);
         },
       );
@@ -229,7 +269,7 @@ void main() {
           expect(tester.takeException(), isNull);
 
           await tapWorkspacePill(tester, 'Calendar');
-          expect(find.byType(CalendarDashboardScreen), findsOneWidget);
+          expect(isSelectedTab(CalendarDashboardScreen), isTrue);
         },
       );
 
@@ -296,11 +336,11 @@ void main() {
         await pumpApp(tester, screenSize: const Size(320 * 3, 700 * 3));
 
         await tapWorkspacePill(tester, 'Planner');
-        expect(find.byType(PlannerScreen), findsOneWidget);
+        expect(isSelectedTab(PlannerScreen), isTrue);
         expect(tester.takeException(), isNull);
 
         await tapWorkspacePill(tester, 'Habits');
-        expect(find.byType(HabitsDashboardScreen), findsOneWidget);
+        expect(isSelectedTab(HabitsDashboardScreen), isTrue);
         expect(tester.takeException(), isNull);
       },
     );

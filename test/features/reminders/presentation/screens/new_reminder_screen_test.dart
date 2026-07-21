@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/screens/new_reminder_screen.dart';
@@ -77,6 +78,9 @@ void main() {
     expect(find.text('Yearly'), findsOneWidget);
     // Custom is intentionally not offered — no rule language is defined.
     expect(find.text('Custom'), findsNothing);
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('Medicine'), findsOneWidget);
+    expect(find.text('Other'), findsOneWidget);
     expect(find.text('Save Reminder'), findsOneWidget);
   });
 
@@ -121,6 +125,46 @@ void main() {
       find.ancestor(of: find.text('Daily'), matching: find.byType(ChoiceChip)),
     );
     expect(chip.selected, isTrue);
+  });
+
+  testWidgets('selecting a category chip updates the selection', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    await tester.ensureVisible(find.text('Work'));
+    await tester.tap(find.text('Work'));
+    await tester.pump();
+
+    final chip = tester.widget<ChoiceChip>(
+      find.ancestor(of: find.text('Work'), matching: find.byType(ChoiceChip)),
+    );
+    expect(chip.selected, isTrue);
+  });
+
+  testWidgets('the created reminder persists the selected category', (
+    tester,
+  ) async {
+    final container = await pump(tester);
+    final sub = container.listen(reminderRequestsProvider, (_, _) {});
+    addTearDown(sub.close);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Title'),
+      'Team standup',
+    );
+    await tester.ensureVisible(find.text('Meeting'));
+    await tester.tap(find.text('Meeting'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Save Reminder'));
+    await tester.tap(find.text('Save Reminder'));
+    await tester.pumpAndSettle();
+
+    final createdId = container.read(reminderRequestsProvider).value!.single.id;
+    final repository = container.read(remindersRepositoryProvider);
+    final created = await repository.getById(createdId);
+    expect(created, isNotNull);
+    expect(created!.category, ReminderCategory.meeting);
   });
 
   testWidgets('saving with valid input adds a reminder and pops', (

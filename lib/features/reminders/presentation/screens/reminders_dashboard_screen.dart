@@ -11,14 +11,12 @@ import 'package:lifeos/features/reminders/presentation/widgets/dashboard/reminde
 import 'package:lifeos/features/reminders/presentation/widgets/dashboard/reminders_today_section.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/dashboard/reminders_up_next_section.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/dashboard/reminders_upcoming_section.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/feedback/section_loading_placeholder.dart';
 
-/// The `/reminders` tab root — the Reminders workspace dashboard (Phase 3):
-/// hero + workspace nav (Phase 2, unchanged) + a real, Drift-backed
-/// dashboard sheet, hosted by the shared [PlanningWorkspaceScaffold] (Phase
-/// 5) that also hosts `PlannerScreen`.
+/// The Reminders tab of the planning workspace — a real, Drift-backed
+/// dashboard sheet, hosted as one of the four bodies switched by
+/// `PlanningWorkspaceScaffold` (`planning_workspace_scaffold.dart`).
 ///
 /// The sheet derives entirely from [remindersDashboardDataProvider], which
 /// itself derives from `RemindersRepository.watchAll()` — no dashboard
@@ -33,14 +31,11 @@ class RemindersDashboardScreen extends ConsumerWidget {
     final now = ref.watch(remindersClockTickProvider).value ?? DateTime.now();
     final dashboardAsync = ref.watch(remindersDashboardDataProvider);
 
-    return PlanningWorkspaceScaffold(
-      activeSection: PlanningWorkspaceSection.reminders,
-      content: dashboardAsync.when(
-        data: (data) => _RemindersDashboardContent(data: data, now: now),
-        loading: () => const _RemindersDashboardLoading(),
-        error: (error, stack) => _RemindersDashboardError(
-          onRetry: () => ref.invalidate(remindersDashboardDataProvider),
-        ),
+    return dashboardAsync.when(
+      data: (data) => _RemindersDashboardContent(data: data, now: now),
+      loading: () => const _RemindersDashboardLoading(),
+      error: (error, stack) => _RemindersDashboardError(
+        onRetry: () => ref.invalidate(remindersDashboardDataProvider),
       ),
     );
   }

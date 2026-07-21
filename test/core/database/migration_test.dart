@@ -84,6 +84,24 @@ void main() {
           ('done', 0, 100, 25, 'focus'),
           ('mid-flight', 0, NULL, 25, 'focus');
       ''');
+    // `reminders` already exists by v4 (created v1->v2, gained
+    // recurrence/customRule v2->v3) — seeded here too so the `from < 6`
+    // branch's `ALTER TABLE ... ADD COLUMN category` has a real table to
+    // run against, same as a genuine v4 database would.
+    seed.execute('''
+        CREATE TABLE reminders (
+          id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          due_at INTEGER NOT NULL,
+          is_urgent INTEGER NOT NULL DEFAULT 0,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          completed_at INTEGER,
+          deleted_at INTEGER,
+          recurrence TEXT NOT NULL DEFAULT 'none',
+          custom_rule TEXT,
+          PRIMARY KEY (id)
+        );
+      ''');
     seed.execute('PRAGMA user_version = 4');
     seed.dispose();
 
@@ -240,6 +258,52 @@ void main() {
     final reminders = await db.remindersDao.watchAll().first;
     expect(reminders, hasLength(1));
     expect(reminders.single.id, 'r1');
+
+    await db.close();
+  });
+
+  test('upgrading from a v5 database adds category to Reminders, backfilling '
+      "existing rows to 'other' without losing data", () async {
+    // Same rationale as the earlier migration tests: a real temp-file
+    // database is required to seed a genuine pre-migration schema and
+    // prove the v5→v6 onUpgrade step actually runs against pre-existing
+    // data, rather than just asserting on a freshly-created v6 schema.
+    final tempDir = await Directory.systemTemp.createTemp(
+      'lifeos_migration_test_v5',
+    );
+    final dbFile = File(p.join(tempDir.path, 'v5.sqlite'));
+    addTearDown(() => tempDir.delete(recursive: true));
+
+    final seed = sqlite3.sqlite3.open(dbFile.path);
+    seed.execute('''
+        CREATE TABLE reminders (
+          id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          due_at INTEGER NOT NULL,
+          is_urgent INTEGER NOT NULL DEFAULT 0,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          completed_at INTEGER,
+          deleted_at INTEGER,
+          recurrence TEXT NOT NULL DEFAULT 'none',
+          custom_rule TEXT,
+          PRIMARY KEY (id)
+        );
+      ''');
+    seed.execute('''
+        INSERT INTO reminders (id, title, due_at, recurrence)
+        VALUES ('r1', 'Pre-migration reminder', 0, 'none');
+      ''');
+    seed.execute('PRAGMA user_version = 5');
+    seed.dispose();
+
+    final db = AppDatabase.forTesting(NativeDatabase(dbFile));
+
+    final reminders = await db.remindersDao.watchAll().first;
+    expect(reminders, hasLength(1));
+    expect(reminders.single.id, 'r1');
+    // The new column's default applies retroactively to the pre-existing
+    // row, not just rows inserted after the migration.
+    expect(reminders.single.category, 'other');
 
     await db.close();
   });

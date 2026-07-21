@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
 
 part 'create_reminder_request.freezed.dart';
 
@@ -13,5 +14,6 @@ abstract class CreateReminderRequest with _$CreateReminderRequest {
     required DateTime dueAt,
     required bool isUrgent,
     @Default(RecurrenceRule.none) RecurrenceRule recurrence,
+    @Default(ReminderCategory.other) ReminderCategory category,
   }) = _CreateReminderRequest;
 }

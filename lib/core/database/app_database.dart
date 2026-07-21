@@ -74,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -118,6 +118,9 @@ class AppDatabase extends _$AppDatabase {
             "UPDATE focus_sessions SET status = 'completed' "
             'WHERE ended_at IS NOT NULL',
           );
+        }
+        if (from < 6) {
+          await m.addColumn(reminders, reminders.category);
         }
       }
     },

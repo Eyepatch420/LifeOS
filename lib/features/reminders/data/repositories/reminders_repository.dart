@@ -5,6 +5,7 @@ import 'package:lifeos/core/events/event_bus.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_calculator.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/entities/reminder.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
 import 'package:lifeos/features/reminders/domain/events/reminder_events.dart';
 
 /// The single owner of Reminders persistence — every mutation and query
@@ -38,6 +39,7 @@ class RemindersRepository {
     required DateTime dueAt,
     required bool isUrgent,
     RecurrenceRule recurrence = RecurrenceRule.none,
+    ReminderCategory category = ReminderCategory.other,
     String? customRule,
   }) async {
     await _dao.upsert(
@@ -47,6 +49,7 @@ class RemindersRepository {
         dueAt: dueAt,
         isUrgent: Value(isUrgent),
         recurrence: Value(recurrence.storageKey),
+        category: Value(category.storageKey),
         customRule: Value(customRule),
       ),
     );
@@ -59,6 +62,7 @@ class RemindersRepository {
     required DateTime dueAt,
     required bool isUrgent,
     required RecurrenceRule recurrence,
+    required ReminderCategory category,
     String? customRule,
   }) async {
     await _dao.updateFields(
@@ -68,6 +72,7 @@ class RemindersRepository {
         dueAt: Value(dueAt),
         isUrgent: Value(isUrgent),
         recurrence: Value(recurrence.storageKey),
+        category: Value(category.storageKey),
         customRule: Value(customRule),
       ),
     );
@@ -150,6 +155,7 @@ class RemindersRepository {
     isCompleted: row.isCompleted,
     completedAt: row.completedAt,
     recurrence: RecurrenceRule.fromStorageKey(row.recurrence),
+    category: ReminderCategory.fromStorageKey(row.category),
     customRule: row.customRule,
   );
 }

@@ -27,11 +27,12 @@ import 'package:lifeos/features/notes/presentation/screens/note_edit_screen.dart
 import 'package:lifeos/features/notes/presentation/screens/notes_list_screen.dart';
 import 'package:lifeos/features/notifications/presentation/screens/notifications_placeholder_screen.dart';
 import 'package:lifeos/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:lifeos/features/reminders/presentation/providers/planning_workspace_section_provider.dart';
 import 'package:lifeos/features/reminders/presentation/screens/new_reminder_screen.dart';
-import 'package:lifeos/features/reminders/presentation/screens/planner_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminder_detail_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_list_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
 import 'package:lifeos/features/splash/presentation/screens/splash_screen.dart';
 import 'package:lifeos/features/user_setup/presentation/providers/user_profile_providers.dart';
@@ -259,7 +260,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: RoutePaths.reminders,
                 name: RouteNames.reminders,
-                builder: (context, state) => const RemindersDashboardScreen(),
+                builder: (context, state) => const PlanningWorkspaceScaffold(
+                  remindersBody: RemindersDashboardScreen(),
+                  habitsBody: HabitsDashboardScreen(),
+                  calendarBody: CalendarDashboardScreen(),
+                ),
                 routes: [
                   // Static children declared before the dynamic
                   // `:reminderId` child below — go_router tries routes in
@@ -291,20 +296,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: RoutePaths.planner,
                     name: RouteNames.planner,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => buildFadeThroughPage(
-                      key: state.pageKey,
-                      child: const PlannerScreen(),
-                    ),
+                    // No pageBuilder: selecting the Planner tab is local
+                    // workspace state now (see planningWorkspaceScaffold.dart
+                    // + planningWorkspaceSectionProvider), not a pushed
+                    // page — this route exists only so
+                    // `/reminders/planner` deep-links and any
+                    // `context.pushNamed(RouteNames.planner)` call sites
+                    // still resolve, by selecting the tab then redirecting
+                    // back to the workspace root instead of 404ing.
+                    //
+                    // The provider write is deferred via `Future.microtask`
+                    // because `redirect` runs during route resolution, which
+                    // is itself part of the widget tree's build phase —
+                    // writing to a provider synchronously here throws
+                    // "Tried to modify a provider while the widget tree was
+                    // building."
+                    redirect: (context, state) {
+                      Future.microtask(
+                        () => ref
+                            .read(planningWorkspaceSectionProvider.notifier)
+                            .select(PlanningWorkspaceSection.planner),
+                      );
+                      return RoutePaths.reminders;
+                    },
                   ),
                   GoRoute(
                     path: RoutePaths.habits,
                     name: RouteNames.habits,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => buildFadeThroughPage(
-                      key: state.pageKey,
-                      child: const HabitsDashboardScreen(),
-                    ),
+                    // See the `planner` route above for why this is
+                    // redirect-only and defers its provider write.
+                    redirect: (context, state) {
+                      Future.microtask(
+                        () => ref
+                            .read(planningWorkspaceSectionProvider.notifier)
+                            .select(PlanningWorkspaceSection.habits),
+                      );
+                      return RoutePaths.reminders;
+                    },
                   ),
                   GoRoute(
                     path: RoutePaths.newHabit,
@@ -329,11 +357,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: RoutePaths.calendar,
                     name: RouteNames.calendar,
-                    parentNavigatorKey: _rootNavigatorKey,
-                    pageBuilder: (context, state) => buildFadeThroughPage(
-                      key: state.pageKey,
-                      child: const CalendarDashboardScreen(),
-                    ),
+                    // See the `planner` route above for why this is
+                    // redirect-only and defers its provider write.
+                    redirect: (context, state) {
+                      Future.microtask(
+                        () => ref
+                            .read(planningWorkspaceSectionProvider.notifier)
+                            .select(PlanningWorkspaceSection.calendar),
+                      );
+                      return RoutePaths.reminders;
+                    },
                   ),
                   GoRoute(
                     path: RoutePaths.newEvent,

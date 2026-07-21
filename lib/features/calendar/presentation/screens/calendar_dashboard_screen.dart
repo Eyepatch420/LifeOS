@@ -9,16 +9,15 @@ import 'package:lifeos/core/extensions/context_extensions.dart';
 import 'package:lifeos/features/calendar/domain/entities/event.dart';
 import 'package:lifeos/features/calendar/presentation/providers/calendar_dashboard_provider.dart';
 import 'package:lifeos/features/calendar/presentation/providers/calendar_selected_date_provider.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/shared/widgets/cards/section_card.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/planning/planner_date_strip.dart';
 import 'package:lifeos/shared/widgets/planning/planner_header.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
-/// The `/reminders/calendar` workspace root — a real, Drift-backed Calendar
-/// dashboard hosted by the same [PlanningWorkspaceScaffold] as
-/// `RemindersDashboardScreen`/`PlannerScreen`/`HabitsDashboardScreen`,
+/// The Calendar tab of the planning workspace — a real, Drift-backed
+/// Calendar dashboard, hosted as one of the four bodies switched by
+/// `PlanningWorkspaceScaffold` (`planning_workspace_scaffold.dart`),
 /// replacing the Phase 5/6 non-navigating nav placeholder.
 ///
 /// Calendar's selected date ([calendarSelectedDateProvider]) is
@@ -34,40 +33,35 @@ class CalendarDashboardScreen extends ConsumerWidget {
     final theme = ref.watch(activeWorkspaceThemeProvider);
     final eventsAsync = ref.watch(_selectedDayEventsProvider(selectedDate));
 
-    return PlanningWorkspaceScaffold(
-      activeSection: PlanningWorkspaceSection.calendar,
-      content: StaggeredEntrance(
-        children: [
-          PlannerHeader(
+    return StaggeredEntrance(
+      children: [
+        PlannerHeader(
+          selectedDate: selectedDate,
+          onPreviousDay: dateNotifier.previousDay,
+          onNextDay: dateNotifier.nextDay,
+          onToday: dateNotifier.resetToToday,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: PlannerDateStrip(
             selectedDate: selectedDate,
-            onPreviousDay: dateNotifier.previousDay,
-            onNextDay: dateNotifier.nextDay,
-            onToday: dateNotifier.resetToToday,
+            onDateSelected: dateNotifier.selectDate,
+            theme: theme,
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.lg),
-            child: PlannerDateStrip(
-              selectedDate: selectedDate,
-              onDateSelected: dateNotifier.selectDate,
-              theme: theme,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
+          child: eventsAsync.when(
+            data: (events) =>
+                _CalendarDayContent(events: events, selectedDate: selectedDate),
+            loading: () => const _CalendarLoading(),
+            error: (error, stack) => _CalendarError(
+              onRetry: () =>
+                  ref.invalidate(_selectedDayEventsProvider(selectedDate)),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.lg),
-            child: eventsAsync.when(
-              data: (events) => _CalendarDayContent(
-                events: events,
-                selectedDate: selectedDate,
-              ),
-              loading: () => const _CalendarLoading(),
-              error: (error, stack) => _CalendarError(
-                onRetry: () =>
-                    ref.invalidate(_selectedDayEventsProvider(selectedDate)),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

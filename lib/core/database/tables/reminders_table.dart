@@ -23,6 +23,13 @@ class Reminders extends Table {
   /// JSON) backing `RecurrenceRule.custom`. Unused by any UI in this pass.
   TextColumn get customRule => text().nullable()();
 
+  /// The category name (`medicine`/`meeting`/`work`/... — see
+  /// `features/reminders/domain/entities/reminder_category.dart`), stored
+  /// as text rather than an int index so a future enum reordering never
+  /// silently corrupts existing rows. Added schema v6; existing rows
+  /// backfill to `other` via the column default.
+  TextColumn get category => text().withDefault(const Constant('other'))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }

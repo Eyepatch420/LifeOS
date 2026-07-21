@@ -1,8 +1,11 @@
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/core/events/event_bus.dart';
 import 'package:lifeos/features/reminders/data/repositories/reminders_repository.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category_label.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_agenda_contributor.dart';
 
 void main() {
@@ -60,6 +63,37 @@ void main() {
     final entries = await contributor.contributions().first;
 
     expect(entries, isEmpty);
+  });
+
+  test('maps reminder category to its icon, falling back to the category '
+      'color when not urgent', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Take medicine',
+      dueAt: DateTime(2026, 1, 1, 9),
+      isUrgent: false,
+      category: ReminderCategory.medicine,
+    );
+
+    final entries = await contributor.contributions().first;
+
+    final entry = entries.single;
+    expect(entry.icon, reminderCategoryIcon(ReminderCategory.medicine));
+    expect(entry.dotColor, reminderCategoryColor(ReminderCategory.medicine));
+  });
+
+  test('an urgent reminder keeps the red dot regardless of category', () async {
+    await repository.create(
+      id: 'r1',
+      title: 'Take medicine',
+      dueAt: DateTime(2026, 1, 1, 9),
+      isUrgent: true,
+      category: ReminderCategory.medicine,
+    );
+
+    final entries = await contributor.contributions().first;
+
+    expect(entries.single.dotColor, Colors.red);
   });
 
   test('dismiss marks the reminder completed', () async {

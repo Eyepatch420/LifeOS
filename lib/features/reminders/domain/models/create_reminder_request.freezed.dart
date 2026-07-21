@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateReminderRequest {
 
- String get id; String get title; DateTime get dueAt; bool get isUrgent; RecurrenceRule get recurrence;
+ String get id; String get title; DateTime get dueAt; bool get isUrgent; RecurrenceRule get recurrence; ReminderCategory get category;
 /// Create a copy of CreateReminderRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CreateReminderRequestCopyWith<CreateReminderRequest> get copyWith => _$CreateRe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateReminderRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateReminderRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.category, category) || other.category == category));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,dueAt,isUrgent,recurrence);
+int get hashCode => Object.hash(runtimeType,id,title,dueAt,isUrgent,recurrence,category);
 
 @override
 String toString() {
-  return 'CreateReminderRequest(id: $id, title: $title, dueAt: $dueAt, isUrgent: $isUrgent, recurrence: $recurrence)';
+  return 'CreateReminderRequest(id: $id, title: $title, dueAt: $dueAt, isUrgent: $isUrgent, recurrence: $recurrence, category: $category)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $CreateReminderRequestCopyWith<$Res>  {
   factory $CreateReminderRequestCopyWith(CreateReminderRequest value, $Res Function(CreateReminderRequest) _then) = _$CreateReminderRequestCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, DateTime dueAt, bool isUrgent, RecurrenceRule recurrence
+ String id, String title, DateTime dueAt, bool isUrgent, RecurrenceRule recurrence, ReminderCategory category
 });
 
 
@@ -62,14 +62,15 @@ class _$CreateReminderRequestCopyWithImpl<$Res>
 
 /// Create a copy of CreateReminderRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? dueAt = null,Object? isUrgent = null,Object? recurrence = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? dueAt = null,Object? isUrgent = null,Object? recurrence = null,Object? category = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,dueAt: null == dueAt ? _self.dueAt : dueAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_nullable_to_non_nullable
 as bool,recurrence: null == recurrence ? _self.recurrence : recurrence // ignore: cast_nullable_to_non_nullable
-as RecurrenceRule,
+as RecurrenceRule,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as ReminderCategory,
   ));
 }
 
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence,  ReminderCategory category)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateReminderRequest() when $default != null:
-return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence);case _:
+return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence,_that.category);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence,  ReminderCategory category)  $default,) {final _that = this;
 switch (_that) {
 case _CreateReminderRequest():
-return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence);case _:
+return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence,_that.category);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  DateTime dueAt,  bool isUrgent,  RecurrenceRule recurrence,  ReminderCategory category)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateReminderRequest() when $default != null:
-return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence);case _:
+return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence,_that.category);case _:
   return null;
 
 }
@@ -210,7 +211,7 @@ return $default(_that.id,_that.title,_that.dueAt,_that.isUrgent,_that.recurrence
 
 
 class _CreateReminderRequest implements CreateReminderRequest {
-  const _CreateReminderRequest({required this.id, required this.title, required this.dueAt, required this.isUrgent, this.recurrence = RecurrenceRule.none});
+  const _CreateReminderRequest({required this.id, required this.title, required this.dueAt, required this.isUrgent, this.recurrence = RecurrenceRule.none, this.category = ReminderCategory.other});
   
 
 @override final  String id;
@@ -218,6 +219,7 @@ class _CreateReminderRequest implements CreateReminderRequest {
 @override final  DateTime dueAt;
 @override final  bool isUrgent;
 @override@JsonKey() final  RecurrenceRule recurrence;
+@override@JsonKey() final  ReminderCategory category;
 
 /// Create a copy of CreateReminderRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +231,16 @@ _$CreateReminderRequestCopyWith<_CreateReminderRequest> get copyWith => __$Creat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateReminderRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateReminderRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.dueAt, dueAt) || other.dueAt == dueAt)&&(identical(other.isUrgent, isUrgent) || other.isUrgent == isUrgent)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.category, category) || other.category == category));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,dueAt,isUrgent,recurrence);
+int get hashCode => Object.hash(runtimeType,id,title,dueAt,isUrgent,recurrence,category);
 
 @override
 String toString() {
-  return 'CreateReminderRequest(id: $id, title: $title, dueAt: $dueAt, isUrgent: $isUrgent, recurrence: $recurrence)';
+  return 'CreateReminderRequest(id: $id, title: $title, dueAt: $dueAt, isUrgent: $isUrgent, recurrence: $recurrence, category: $category)';
 }
 
 
@@ -249,7 +251,7 @@ abstract mixin class _$CreateReminderRequestCopyWith<$Res> implements $CreateRem
   factory _$CreateReminderRequestCopyWith(_CreateReminderRequest value, $Res Function(_CreateReminderRequest) _then) = __$CreateReminderRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, DateTime dueAt, bool isUrgent, RecurrenceRule recurrence
+ String id, String title, DateTime dueAt, bool isUrgent, RecurrenceRule recurrence, ReminderCategory category
 });
 
 
@@ -266,14 +268,15 @@ class __$CreateReminderRequestCopyWithImpl<$Res>
 
 /// Create a copy of CreateReminderRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? dueAt = null,Object? isUrgent = null,Object? recurrence = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? dueAt = null,Object? isUrgent = null,Object? recurrence = null,Object? category = null,}) {
   return _then(_CreateReminderRequest(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,dueAt: null == dueAt ? _self.dueAt : dueAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isUrgent: null == isUrgent ? _self.isUrgent : isUrgent // ignore: cast_nullable_to_non_nullable
 as bool,recurrence: null == recurrence ? _self.recurrence : recurrence // ignore: cast_nullable_to_non_nullable
-as RecurrenceRule,
+as RecurrenceRule,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as ReminderCategory,
   ));
 }
 

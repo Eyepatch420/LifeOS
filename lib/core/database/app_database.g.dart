@@ -773,6 +773,18 @@ class $RemindersTable extends Reminders
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('other'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -784,6 +796,7 @@ class $RemindersTable extends Reminders
     deletedAt,
     recurrence,
     customRule,
+    category,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -860,6 +873,12 @@ class $RemindersTable extends Reminders
         customRule.isAcceptableOrUnknown(data['custom_rule']!, _customRuleMeta),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -905,6 +924,10 @@ class $RemindersTable extends Reminders
         DriftSqlType.string,
         data['${effectivePrefix}custom_rule'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
     );
   }
 
@@ -936,6 +959,13 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   /// Reserved for a future rule-language (e.g. an RRULE-like string or
   /// JSON) backing `RecurrenceRule.custom`. Unused by any UI in this pass.
   final String? customRule;
+
+  /// The category name (`medicine`/`meeting`/`work`/... — see
+  /// `features/reminders/domain/entities/reminder_category.dart`), stored
+  /// as text rather than an int index so a future enum reordering never
+  /// silently corrupts existing rows. Added schema v6; existing rows
+  /// backfill to `other` via the column default.
+  final String category;
   const Reminder({
     required this.id,
     required this.title,
@@ -946,6 +976,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     this.deletedAt,
     required this.recurrence,
     this.customRule,
+    required this.category,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -965,6 +996,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     if (!nullToAbsent || customRule != null) {
       map['custom_rule'] = Variable<String>(customRule);
     }
+    map['category'] = Variable<String>(category);
     return map;
   }
 
@@ -985,6 +1017,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       customRule: customRule == null && nullToAbsent
           ? const Value.absent()
           : Value(customRule),
+      category: Value(category),
     );
   }
 
@@ -1003,6 +1036,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       recurrence: serializer.fromJson<String>(json['recurrence']),
       customRule: serializer.fromJson<String?>(json['customRule']),
+      category: serializer.fromJson<String>(json['category']),
     );
   }
   @override
@@ -1018,6 +1052,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'recurrence': serializer.toJson<String>(recurrence),
       'customRule': serializer.toJson<String?>(customRule),
+      'category': serializer.toJson<String>(category),
     };
   }
 
@@ -1031,6 +1066,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     Value<DateTime?> deletedAt = const Value.absent(),
     String? recurrence,
     Value<String?> customRule = const Value.absent(),
+    String? category,
   }) => Reminder(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1041,6 +1077,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     recurrence: recurrence ?? this.recurrence,
     customRule: customRule.present ? customRule.value : this.customRule,
+    category: category ?? this.category,
   );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
@@ -1061,6 +1098,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       customRule: data.customRule.present
           ? data.customRule.value
           : this.customRule,
+      category: data.category.present ? data.category.value : this.category,
     );
   }
 
@@ -1075,7 +1113,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('completedAt: $completedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('recurrence: $recurrence, ')
-          ..write('customRule: $customRule')
+          ..write('customRule: $customRule, ')
+          ..write('category: $category')
           ..write(')'))
         .toString();
   }
@@ -1091,6 +1130,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     deletedAt,
     recurrence,
     customRule,
+    category,
   );
   @override
   bool operator ==(Object other) =>
@@ -1104,7 +1144,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.completedAt == this.completedAt &&
           other.deletedAt == this.deletedAt &&
           other.recurrence == this.recurrence &&
-          other.customRule == this.customRule);
+          other.customRule == this.customRule &&
+          other.category == this.category);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
@@ -1117,6 +1158,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<DateTime?> deletedAt;
   final Value<String> recurrence;
   final Value<String?> customRule;
+  final Value<String> category;
   final Value<int> rowid;
   const RemindersCompanion({
     this.id = const Value.absent(),
@@ -1128,6 +1170,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.deletedAt = const Value.absent(),
     this.recurrence = const Value.absent(),
     this.customRule = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
@@ -1140,6 +1183,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.deletedAt = const Value.absent(),
     this.recurrence = const Value.absent(),
     this.customRule = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -1154,6 +1198,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<DateTime>? deletedAt,
     Expression<String>? recurrence,
     Expression<String>? customRule,
+    Expression<String>? category,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1166,6 +1211,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (recurrence != null) 'recurrence': recurrence,
       if (customRule != null) 'custom_rule': customRule,
+      if (category != null) 'category': category,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1180,6 +1226,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<DateTime?>? deletedAt,
     Value<String>? recurrence,
     Value<String?>? customRule,
+    Value<String>? category,
     Value<int>? rowid,
   }) {
     return RemindersCompanion(
@@ -1192,6 +1239,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       deletedAt: deletedAt ?? this.deletedAt,
       recurrence: recurrence ?? this.recurrence,
       customRule: customRule ?? this.customRule,
+      category: category ?? this.category,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1226,6 +1274,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (customRule.present) {
       map['custom_rule'] = Variable<String>(customRule.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1244,6 +1295,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('deletedAt: $deletedAt, ')
           ..write('recurrence: $recurrence, ')
           ..write('customRule: $customRule, ')
+          ..write('category: $category, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5569,6 +5621,7 @@ typedef $$RemindersTableCreateCompanionBuilder =
       Value<DateTime?> deletedAt,
       Value<String> recurrence,
       Value<String?> customRule,
+      Value<String> category,
       Value<int> rowid,
     });
 typedef $$RemindersTableUpdateCompanionBuilder =
@@ -5582,6 +5635,7 @@ typedef $$RemindersTableUpdateCompanionBuilder =
       Value<DateTime?> deletedAt,
       Value<String> recurrence,
       Value<String?> customRule,
+      Value<String> category,
       Value<int> rowid,
     });
 
@@ -5636,6 +5690,11 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<String> get customRule => $composableBuilder(
     column: $table.customRule,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5693,6 +5752,11 @@ class $$RemindersTableOrderingComposer
     column: $table.customRule,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RemindersTableAnnotationComposer
@@ -5738,6 +5802,9 @@ class $$RemindersTableAnnotationComposer
     column: $table.customRule,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 }
 
 class $$RemindersTableTableManager
@@ -5777,6 +5844,7 @@ class $$RemindersTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String> recurrence = const Value.absent(),
                 Value<String?> customRule = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion(
                 id: id,
@@ -5788,6 +5856,7 @@ class $$RemindersTableTableManager
                 deletedAt: deletedAt,
                 recurrence: recurrence,
                 customRule: customRule,
+                category: category,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5801,6 +5870,7 @@ class $$RemindersTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String> recurrence = const Value.absent(),
                 Value<String?> customRule = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RemindersCompanion.insert(
                 id: id,
@@ -5812,6 +5882,7 @@ class $$RemindersTableTableManager
                 deletedAt: deletedAt,
                 recurrence: recurrence,
                 customRule: customRule,
+                category: category,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

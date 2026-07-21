@@ -9,15 +9,15 @@ import 'package:lifeos/features/habits/domain/contracts/habits_summary.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/habits/presentation/widgets/habits_today_section.dart';
 import 'package:lifeos/features/habits/presentation/widgets/habits_streaks_section.dart';
-import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/shared/widgets/cards/section_card.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
 import 'package:lifeos/shared/widgets/feedback/section_loading_placeholder.dart';
 
-/// The `/reminders/habits` workspace root — a real, Drift-backed Habits
-/// dashboard hosted by the same [PlanningWorkspaceScaffold] as
-/// `RemindersDashboardScreen`/`PlannerScreen`, replacing the Module-3 mock
-/// `NewHabitScreen`/`habit_providers.dart` triad's disconnected scope.
+/// The Habits tab of the planning workspace — a real, Drift-backed Habits
+/// dashboard, hosted as one of the four bodies switched by
+/// `PlanningWorkspaceScaffold` (`planning_workspace_scaffold.dart`),
+/// replacing the Module-3 mock `NewHabitScreen`/`habit_providers.dart`
+/// triad's disconnected scope.
 ///
 /// The sheet derives entirely from [habitsDashboardProvider], which itself
 /// derives from `HabitsRepository.watchAll()` + each habit's completion
@@ -30,14 +30,11 @@ class HabitsDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summaryAsync = ref.watch(habitsDashboardProvider);
 
-    return PlanningWorkspaceScaffold(
-      activeSection: PlanningWorkspaceSection.habits,
-      content: summaryAsync.when(
-        data: (summary) => _HabitsDashboardContent(summary: summary),
-        loading: () => const _HabitsDashboardLoading(),
-        error: (error, stack) => _HabitsDashboardError(
-          onRetry: () => ref.invalidate(habitsDashboardProvider),
-        ),
+    return summaryAsync.when(
+      data: (summary) => _HabitsDashboardContent(summary: summary),
+      loading: () => const _HabitsDashboardLoading(),
+      error: (error, stack) => _HabitsDashboardError(
+        onRetry: () => ref.invalidate(habitsDashboardProvider),
       ),
     );
   }

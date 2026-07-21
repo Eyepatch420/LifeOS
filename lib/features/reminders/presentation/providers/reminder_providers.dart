@@ -21,6 +21,7 @@ class ReminderRequestsNotifier
           dueAt: reminder.dueAt,
           isUrgent: reminder.isUrgent,
           recurrence: reminder.recurrence,
+          category: reminder.category,
         );
     state = AsyncData([...?state.value, reminder]);
   }

@@ -5,6 +5,7 @@ import 'package:lifeos/core/events/domain_event.dart';
 import 'package:lifeos/core/events/event_bus.dart';
 import 'package:lifeos/features/reminders/data/repositories/reminders_repository.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
 import 'package:lifeos/features/reminders/domain/events/reminder_events.dart';
 
 void main() {
@@ -102,6 +103,7 @@ void main() {
         dueAt: newDueAt,
         isUrgent: true,
         recurrence: RecurrenceRule.weekly,
+        category: ReminderCategory.other,
       );
       await pumpEventQueue();
 

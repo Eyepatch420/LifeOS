@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lifeos/core/agenda/agenda_contributor.dart';
 import 'package:lifeos/core/agenda/agenda_entry.dart';
 import 'package:lifeos/features/reminders/data/repositories/reminders_repository.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category_label.dart';
 
 /// Reminders' contribution to the shared cross-feature Agenda (Home's Up
 /// Next/Timeline). Registered at
@@ -21,10 +22,12 @@ class RemindersAgendaContributor implements AgendaContributor {
             id: reminder.id,
             sourceModule: 'reminders',
             sourceId: reminder.id,
-            icon: Icons.medication_outlined,
+            icon: reminderCategoryIcon(reminder.category),
             title: reminder.title,
             time: reminder.dueAt,
-            dotColor: reminder.isUrgent ? Colors.red : Colors.blue,
+            dotColor: reminder.isUrgent
+                ? Colors.red
+                : reminderCategoryColor(reminder.category),
             isUrgent: reminder.isUrgent,
           ),
       ],

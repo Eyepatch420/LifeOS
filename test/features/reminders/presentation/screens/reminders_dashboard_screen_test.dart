@@ -10,9 +10,12 @@ import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/models/reminders_dashboard_data.dart';
+import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
+import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_data_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/reminders_workspace_nav.dart';
 import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
@@ -87,7 +90,11 @@ void main() {
         GoRoute(
           path: '/reminders',
           name: RouteNames.reminders,
-          builder: (context, state) => const RemindersDashboardScreen(),
+          builder: (context, state) => const PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
           routes: [
             GoRoute(
               path: RoutePaths.remindersAll,
@@ -358,7 +365,13 @@ void main() {
             const AsyncLoading<RemindersDashboardData>(),
           ),
         ],
-        child: const MaterialApp(home: RemindersDashboardScreen()),
+        child: const MaterialApp(
+          home: PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
+        ),
       ),
     );
     await tester.pump();
@@ -393,7 +406,13 @@ void main() {
             ),
           ),
         ],
-        child: const MaterialApp(home: RemindersDashboardScreen()),
+        child: const MaterialApp(
+          home: PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
+        ),
       ),
     );
     await tester.pump();

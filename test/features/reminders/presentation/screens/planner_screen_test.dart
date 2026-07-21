@@ -9,9 +9,13 @@ import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
+import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
+import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/reminders/presentation/providers/planner_selected_date_provider.dart';
+import 'package:lifeos/features/reminders/presentation/providers/planning_workspace_section_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
-import 'package:lifeos/features/reminders/presentation/screens/planner_screen.dart';
+import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/reminders_workspace_nav.dart';
 import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
@@ -81,13 +85,24 @@ void main() {
         GoRoute(
           path: '/reminders',
           name: RouteNames.reminders,
-          builder: (context, state) =>
-              const Scaffold(body: Text('Reminders Dashboard')),
+          builder: (context, state) => const PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
           routes: [
             GoRoute(
               path: RoutePaths.planner,
               name: RouteNames.planner,
-              builder: (context, state) => const PlannerScreen(),
+              redirect: (context, state) {
+                final container = ProviderScope.containerOf(context);
+                Future.microtask(
+                  () => container
+                      .read(planningWorkspaceSectionProvider.notifier)
+                      .select(PlanningWorkspaceSection.planner),
+                );
+                return '/reminders';
+              },
             ),
             GoRoute(
               path: RoutePaths.newReminder,

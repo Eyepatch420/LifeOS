@@ -8,6 +8,8 @@ import 'package:lifeos/core/extensions/context_extensions.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule_label.dart';
 import 'package:lifeos/features/reminders/domain/entities/reminder.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category_label.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/shared/widgets/buttons/primary_button.dart';
 import 'package:lifeos/shared/widgets/feedback/empty_state.dart';
@@ -43,12 +45,14 @@ class _ReminderDetailScreenState extends ConsumerState<ReminderDetailScreen> {
   late DateTime _dueAt;
   late bool _isUrgent;
   late RecurrenceRule _recurrence;
+  late ReminderCategory _category;
 
   void _startEditing(Reminder reminder) {
     _titleController = TextEditingController(text: reminder.title);
     _dueAt = reminder.dueAt;
     _isUrgent = reminder.isUrgent;
     _recurrence = reminder.recurrence;
+    _category = reminder.category;
     setState(() {
       _isEditing = true;
       _titleError = null;
@@ -121,6 +125,7 @@ class _ReminderDetailScreenState extends ConsumerState<ReminderDetailScreen> {
             dueAt: _dueAt,
             isUrgent: _isUrgent,
             recurrence: _recurrence,
+            category: _category,
           );
       if (!mounted) return;
       _titleController.dispose();
@@ -279,13 +284,22 @@ class _ReminderDetailScreenState extends ConsumerState<ReminderDetailScreen> {
               ],
             ),
           ],
-          if (reminder.isUrgent) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Chip(
-              label: const Text('Urgent'),
-              backgroundColor: context.colorScheme.errorContainer,
-            ),
-          ],
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              Chip(
+                avatar: Icon(reminderCategoryIcon(reminder.category), size: 18),
+                label: Text(reminderCategoryLabel(reminder.category)),
+              ),
+              if (reminder.isUrgent)
+                Chip(
+                  label: const Text('Urgent'),
+                  backgroundColor: context.colorScheme.errorContainer,
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -356,6 +370,25 @@ class _ReminderDetailScreenState extends ConsumerState<ReminderDetailScreen> {
                       label: Text(recurrenceRuleLabel(rule)),
                       selected: _recurrence == rule,
                       onSelected: (_) => setState(() => _recurrence = rule),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text('Category', style: context.textTheme.labelLarge),
+            const SizedBox(height: AppSpacing.sm),
+            Semantics(
+              label: 'Reminder category',
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final category in ReminderCategory.values)
+                    ChoiceChip(
+                      avatar: Icon(reminderCategoryIcon(category), size: 18),
+                      label: Text(reminderCategoryLabel(category)),
+                      selected: _category == category,
+                      onSelected: (_) => setState(() => _category = category),
                     ),
                 ],
               ),

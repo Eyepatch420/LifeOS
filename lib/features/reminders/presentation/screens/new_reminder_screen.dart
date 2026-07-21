@@ -7,6 +7,8 @@ import 'package:lifeos/core/constants/app_spacing.dart';
 import 'package:lifeos/core/extensions/context_extensions.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule.dart';
 import 'package:lifeos/features/reminders/domain/entities/recurrence_rule_label.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category.dart';
+import 'package:lifeos/features/reminders/domain/entities/reminder_category_label.dart';
 import 'package:lifeos/features/reminders/domain/models/create_reminder_request.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:lifeos/shared/widgets/buttons/primary_button.dart';
@@ -68,6 +70,7 @@ class _NewReminderScreenState extends ConsumerState<NewReminderScreen> {
   late DateTime _dueAt = _initialDueAt(widget.initialDate);
   bool _isUrgent = false;
   RecurrenceRule _recurrence = RecurrenceRule.none;
+  ReminderCategory _category = ReminderCategory.other;
   bool _isSaving = false;
   String? _titleError;
   String? _saveError;
@@ -149,6 +152,7 @@ class _NewReminderScreenState extends ConsumerState<NewReminderScreen> {
               dueAt: _dueAt,
               isUrgent: _isUrgent,
               recurrence: _recurrence,
+              category: _category,
             ),
           );
       if (mounted) context.pop();
@@ -232,6 +236,25 @@ class _NewReminderScreenState extends ConsumerState<NewReminderScreen> {
                         label: Text(recurrenceRuleLabel(rule)),
                         selected: _recurrence == rule,
                         onSelected: (_) => setState(() => _recurrence = rule),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text('Category', style: context.textTheme.labelLarge),
+              const SizedBox(height: AppSpacing.sm),
+              Semantics(
+                label: 'Reminder category',
+                child: Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final category in ReminderCategory.values)
+                      ChoiceChip(
+                        avatar: Icon(reminderCategoryIcon(category), size: 18),
+                        label: Text(reminderCategoryLabel(category)),
+                        selected: _category == category,
+                        onSelected: (_) => setState(() => _category = category),
                       ),
                   ],
                 ),

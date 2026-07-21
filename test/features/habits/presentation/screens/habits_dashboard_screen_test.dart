@@ -8,10 +8,14 @@ import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/database/app_database.dart';
+import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
 import 'package:lifeos/features/habits/domain/contracts/habits_summary.dart';
 import 'package:lifeos/features/habits/domain/entities/habit_schedule.dart';
 import 'package:lifeos/features/habits/presentation/providers/habits_dashboard_provider.dart';
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/providers/planning_workspace_section_provider.dart';
+import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboard_screen.dart';
+import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
 import 'package:lifeos/shared/widgets/feedback/section_loading_placeholder.dart';
@@ -58,6 +62,15 @@ class _FixedWorkspaceNotifier extends CurrentWorkspaceNotifier {
   String build() => _fixed;
 }
 
+class _FixedSectionNotifier extends PlanningWorkspaceSectionNotifier {
+  _FixedSectionNotifier(this._fixed);
+
+  final PlanningWorkspaceSection _fixed;
+
+  @override
+  PlanningWorkspaceSection build() => _fixed;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -77,9 +90,26 @@ void main() {
       initialLocation: '/reminders/habits',
       routes: [
         GoRoute(
+          path: '/reminders',
+          name: RouteNames.reminders,
+          builder: (context, state) => const PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
+        ),
+        GoRoute(
           path: '/reminders/habits',
           name: RouteNames.habits,
-          builder: (context, state) => const HabitsDashboardScreen(),
+          redirect: (context, state) {
+            final scopedContainer = ProviderScope.containerOf(context);
+            Future.microtask(
+              () => scopedContainer
+                  .read(planningWorkspaceSectionProvider.notifier)
+                  .select(PlanningWorkspaceSection.habits),
+            );
+            return '/reminders';
+          },
         ),
         GoRoute(
           path: '/new-habit',
@@ -133,8 +163,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
     return container;
   }
 
@@ -251,8 +280,17 @@ void main() {
           habitsDashboardProvider.overrideWithValue(
             const AsyncLoading<HabitsSummary>(),
           ),
+          planningWorkspaceSectionProvider.overrideWith(
+            () => _FixedSectionNotifier(PlanningWorkspaceSection.habits),
+          ),
         ],
-        child: const MaterialApp(home: HabitsDashboardScreen()),
+        child: const MaterialApp(
+          home: PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
+        ),
       ),
     );
     await tester.pump();
@@ -282,8 +320,17 @@ void main() {
           habitsDashboardProvider.overrideWithValue(
             AsyncError<HabitsSummary>(Exception('boom'), StackTrace.empty),
           ),
+          planningWorkspaceSectionProvider.overrideWith(
+            () => _FixedSectionNotifier(PlanningWorkspaceSection.habits),
+          ),
         ],
-        child: const MaterialApp(home: HabitsDashboardScreen()),
+        child: const MaterialApp(
+          home: PlanningWorkspaceScaffold(
+            remindersBody: RemindersDashboardScreen(),
+            habitsBody: HabitsDashboardScreen(),
+            calendarBody: CalendarDashboardScreen(),
+          ),
+        ),
       ),
     );
     await tester.pump();
