@@ -26,24 +26,26 @@ class CalendarNotificationContributor implements NotificationContributor {
   bool handles(DomainEvent event) => event.sourceModule == 'calendar';
 
   @override
-  NotificationIntent? map(DomainEvent event) {
+  List<NotificationIntent> map(DomainEvent event) {
     return switch (event) {
-      EventCreated(sourceId: final id, :final title, :final startAt) =>
+      EventCreated(sourceId: final id, :final title, :final startAt) => [
         ScheduleNotification(
           id: id,
           when: startAt,
           title: title,
           body: 'Event starting now',
         ),
-      EventUpdated(sourceId: final id, :final title, :final startAt) =>
+      ],
+      EventUpdated(sourceId: final id, :final title, :final startAt) => [
         ScheduleNotification(
           id: id,
           when: startAt,
           title: title,
           body: 'Event starting now',
         ),
-      EventDeleted(sourceId: final id) => CancelNotification(id: id),
-      _ => null,
+      ],
+      EventDeleted(sourceId: final id) => [CancelNotification(id: id)],
+      _ => const [],
     };
   }
 }

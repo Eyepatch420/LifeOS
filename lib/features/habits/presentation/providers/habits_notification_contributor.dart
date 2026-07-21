@@ -23,11 +23,11 @@ class HabitsNotificationContributor implements NotificationContributor {
   bool handles(DomainEvent event) => event.sourceModule == 'habits';
 
   @override
-  NotificationIntent? map(DomainEvent event) {
+  List<NotificationIntent> map(DomainEvent event) {
     return switch (event) {
-      HabitArchived(sourceId: final id) => CancelNotification(id: id),
-      HabitCreated() || HabitUpdated() || HabitCompleted() => null,
-      _ => null,
+      HabitArchived(sourceId: final id) => [CancelNotification(id: id)],
+      HabitCreated() || HabitUpdated() || HabitCompleted() => const [],
+      _ => const [],
     };
   }
 }

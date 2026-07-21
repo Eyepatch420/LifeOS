@@ -21,6 +21,25 @@ abstract interface class NotificationScheduler {
   });
 
   Future<void> cancel(String id);
+
+  /// Posts (or updates in place, since [id] addresses the same underlying
+  /// Android notification either way) a persistent, silent, non-dismissable
+  /// notification showing a live OS-rendered countdown to [countdownTo] —
+  /// used for the Focus "session in progress" notification. This is
+  /// display-only: it never schedules a completion alarm itself (that
+  /// remains [scheduleAt]'s job) and never becomes a timing source of
+  /// truth — the countdown is Android's own Chronometer view rendering
+  /// [countdownTo], not anything this app ticks.
+  Future<void> showOngoing({
+    required String id,
+    required String title,
+    required String body,
+    required DateTime countdownTo,
+  });
+
+  /// Removes a notification previously posted by [showOngoing]. Safe to
+  /// call even if nothing is currently showing for [id].
+  Future<void> cancelOngoing(String id);
 }
 
 class NoopNotificationScheduler implements NotificationScheduler {
@@ -37,6 +56,17 @@ class NoopNotificationScheduler implements NotificationScheduler {
 
   @override
   Future<void> cancel(String id) async {}
+
+  @override
+  Future<void> showOngoing({
+    required String id,
+    required String title,
+    required String body,
+    required DateTime countdownTo,
+  }) async {}
+
+  @override
+  Future<void> cancelOngoing(String id) async {}
 }
 
 /// Android-first real implementation, backed by `flutter_local_notifications`
@@ -54,10 +84,29 @@ class LocalNotificationScheduler implements NotificationScheduler {
 
   final FlutterLocalNotificationsPlugin _plugin;
 
-  static const _channelId = 'reminders';
+  // Android locks a channel's sound at creation time — changing the sound
+  // in code does not mutate an already-created channel on a device where
+  // the old 'reminders' channel (default system sound) already exists.
+  // `_v2` is a genuine channel migration, not a stylistic rename: it's the
+  // only way to make the custom alarm sound actually take effect for
+  // existing installs, at the cost of any user-customized settings on the
+  // old channel being reset once (they land back on this channel's
+  // defaults instead).
+  static const _channelId = 'reminders_v2';
   static const _channelName = 'Reminders';
   static const _channelDescription =
       'Scheduled reminder notifications from LifeOS';
+  static const _channelSound = RawResourceAndroidNotificationSound(
+    'popular_alarm_clock_sound_effect',
+  );
+
+  // Separate low-importance, silent channel: the ongoing Focus notification
+  // is a persistent status display, not an alert — it must never make a
+  // sound/vibrate on every update the way the 'reminders_v2' channel does.
+  static const _ongoingChannelId = 'focus_ongoing';
+  static const _ongoingChannelName = 'Focus session in progress';
+  static const _ongoingChannelDescription =
+      'Shows the live countdown while a Focus session is running';
 
   /// Must be called once, before the first [scheduleAt]/[cancel] call —
   /// initializes the plugin and the `timezone` database, registers the
@@ -82,18 +131,36 @@ class LocalNotificationScheduler implements NotificationScheduler {
           handleBackgroundNotificationResponse,
     );
 
-    await _plugin
+    final android = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(
-          const AndroidNotificationChannel(
-            _channelId,
-            _channelName,
-            description: _channelDescription,
-            importance: Importance.high,
-          ),
-        );
+        >();
+    // Android 13+ (API 33) requires this runtime grant or the OS silently
+    // drops every notification this scheduler posts — there is no manifest
+    // permission alone that makes notifications appear. Safe to call
+    // unconditionally: the plugin is a no-op on API <33 and de-dupes an
+    // already-granted permission itself.
+    await android?.requestNotificationsPermission();
+
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        description: _channelDescription,
+        importance: Importance.high,
+        sound: _channelSound,
+      ),
+    );
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _ongoingChannelId,
+        _ongoingChannelName,
+        description: _ongoingChannelDescription,
+        importance: Importance.low,
+        playSound: false,
+        enableVibration: false,
+      ),
+    );
   }
 
   /// Reads whatever notification (if any) cold-launched the app and
@@ -127,6 +194,7 @@ class LocalNotificationScheduler implements NotificationScheduler {
         channelDescription: _channelDescription,
         importance: Importance.high,
         priority: Priority.high,
+        sound: _channelSound,
       ),
     );
     final when_ = tz.TZDateTime.from(when, tz.local);
@@ -176,6 +244,51 @@ class LocalNotificationScheduler implements NotificationScheduler {
 
   @override
   Future<void> cancel(String id) => _plugin.cancel(_stableIntId(id));
+
+  @override
+  Future<void> showOngoing({
+    required String id,
+    required String title,
+    required String body,
+    required DateTime countdownTo,
+  }) async {
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _ongoingChannelId,
+        _ongoingChannelName,
+        channelDescription: _ongoingChannelDescription,
+        importance: Importance.low,
+        priority: Priority.low,
+        playSound: false,
+        enableVibration: false,
+        // ongoing + not autoCancel: dismissed only by cancelOngoing() (on
+        // pause/resume/complete/cancel), never by the user swiping it or
+        // tapping it away — it should track the session's actual state at
+        // all times, not disappear out of sync with it.
+        ongoing: true,
+        autoCancel: false,
+        showWhen: true,
+        usesChronometer: true,
+        chronometerCountDown: true,
+        // Android's Chronometer renders this itself, independent of the
+        // Flutter process — it keeps counting down even if the app is
+        // killed or backgrounded, unlike a Dart Timer rewriting the
+        // notification every second.
+        when: countdownTo.millisecondsSinceEpoch,
+      ),
+    );
+    await _plugin.show(_ongoingIntId(id), title, body, details);
+  }
+
+  @override
+  Future<void> cancelOngoing(String id) => _plugin.cancel(_ongoingIntId(id));
+
+  /// Ongoing notifications are addressed separately from [scheduleAt]'s
+  /// completion alarm — same string [id] (a Focus session id) but a
+  /// different derived int, so posting/updating the live countdown never
+  /// collides with or overwrites the scheduled completion notification for
+  /// the same session.
+  int _ongoingIntId(String id) => _stableIntId('ongoing:$id');
 
   /// Deterministic 31-bit positive int from a stable string id — stable
   /// across app restarts (unlike `Object.hashCode`, which is not guaranteed

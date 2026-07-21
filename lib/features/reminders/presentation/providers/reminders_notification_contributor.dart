@@ -17,25 +17,29 @@ class RemindersNotificationContributor implements NotificationContributor {
   bool handles(DomainEvent event) => event.sourceModule == 'reminders';
 
   @override
-  NotificationIntent? map(DomainEvent event) {
+  List<NotificationIntent> map(DomainEvent event) {
     return switch (event) {
-      ReminderCreated(sourceId: final id, :final title, :final dueAt) =>
+      ReminderCreated(sourceId: final id, :final title, :final dueAt) => [
         ScheduleNotification(
           id: id,
           when: dueAt,
           title: title,
           body: 'Reminder due now',
+          payload: 'reminder:$id',
         ),
-      ReminderUpdated(sourceId: final id, :final title, :final dueAt) =>
+      ],
+      ReminderUpdated(sourceId: final id, :final title, :final dueAt) => [
         ScheduleNotification(
           id: id,
           when: dueAt,
           title: title,
           body: 'Reminder due now',
+          payload: 'reminder:$id',
         ),
-      ReminderCompleted(sourceId: final id) => CancelNotification(id: id),
-      ReminderDeleted(sourceId: final id) => CancelNotification(id: id),
-      _ => null,
+      ],
+      ReminderCompleted(sourceId: final id) => [CancelNotification(id: id)],
+      ReminderDeleted(sourceId: final id) => [CancelNotification(id: id)],
+      _ => const [],
     };
   }
 }

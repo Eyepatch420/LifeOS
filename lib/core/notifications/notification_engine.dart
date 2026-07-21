@@ -35,31 +35,42 @@ class NotificationEngine {
   Future<void> _handle(DomainEvent event) async {
     for (final contributor in contributors) {
       if (!contributor.handles(event)) continue;
-      final intent = contributor.map(event);
-      if (intent == null) return;
+      final intents = contributor.map(event);
+      if (intents.isEmpty) return;
 
-      switch (intent) {
-        case ScheduleNotification():
-          await scheduler.scheduleAt(
-            id: intent.id,
-            when: intent.when,
-            title: intent.title,
-            body: intent.body,
-            payload: intent.payload,
-          );
-          await notificationsDao.insert(
-            db.NotificationsCompanion.insert(
-              id: idFactory(),
-              sourceModule: event.sourceModule,
-              sourceId: event.sourceId,
+      for (final intent in intents) {
+        switch (intent) {
+          case ScheduleNotification():
+            await scheduler.scheduleAt(
+              id: intent.id,
+              when: intent.when,
               title: intent.title,
               body: intent.body,
-              createdAt: intent.when,
-              readAt: const Value(null),
-            ),
-          );
-        case CancelNotification():
-          await scheduler.cancel(intent.id);
+              payload: intent.payload,
+            );
+            await notificationsDao.insert(
+              db.NotificationsCompanion.insert(
+                id: idFactory(),
+                sourceModule: event.sourceModule,
+                sourceId: event.sourceId,
+                title: intent.title,
+                body: intent.body,
+                createdAt: intent.when,
+                readAt: const Value(null),
+              ),
+            );
+          case CancelNotification():
+            await scheduler.cancel(intent.id);
+          case ShowOngoingNotification():
+            await scheduler.showOngoing(
+              id: intent.id,
+              title: intent.title,
+              body: intent.body,
+              countdownTo: intent.countdownTo,
+            );
+          case CancelOngoingNotification():
+            await scheduler.cancelOngoing(intent.id);
+        }
       }
       return;
     }

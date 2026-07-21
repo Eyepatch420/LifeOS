@@ -36,11 +36,11 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
     super.dispose();
   }
 
-  /// Routes a tapped notification's payload. Only `focus:<sessionId>` is
-  /// understood today — unrecognized payloads are ignored rather than
-  /// throwing, since a stale/foreign payload should never crash navigation.
+  /// Routes a tapped notification's payload by its `<kind>:<id>` prefix.
+  /// Unrecognized payloads are ignored rather than throwing, since a
+  /// stale/foreign payload should never crash navigation.
   ///
-  /// Always routes to the Focus Overview (never directly to
+  /// `focus:` always routes to the Focus Overview (never directly to
   /// `focusSessionDetail`): a background-completion notification fires from
   /// an OS-scheduled alarm with no live app process to check "did this
   /// session actually complete yet, or is it a stale/cancelled alarm" —
@@ -51,16 +51,31 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
   /// exactly like the `Otherwise route to Focus Overview` fallback this
   /// feature's spec calls for.
   ///
-  /// Uses `pushNamed` (not `goNamed`/`go`) so Focus lands on top of
-  /// whatever's already on the root navigator's stack instead of replacing
-  /// it — Home (or wherever the user was) stays underneath, so Back from
-  /// Focus returns there instead of popping an artificially rebuilt stack.
+  /// `reminder:` routes straight to that reminder's detail screen — unlike
+  /// Focus, there's no reconciliation step a Reminder destination needs to
+  /// run first.
+  ///
+  /// Both use `pushNamed` (not `goNamed`/`go`) so the destination lands on
+  /// top of whatever's already on the root navigator's stack instead of
+  /// replacing it — Home (or wherever the user was) stays underneath, so
+  /// Back returns there instead of popping an artificially rebuilt stack.
   /// This matches how every other Home-launched screen
   /// (`TimelineDetailScreen`, `NoteDetailScreen`, ...) is already pushed.
   void _handleTap(String payload) {
-    if (!payload.startsWith('focus:')) return;
     final router = ref.read(appRouterProvider);
-    router.pushNamed(RouteNames.focus);
+    final separator = payload.indexOf(':');
+    if (separator == -1) return;
+    final kind = payload.substring(0, separator);
+    final id = payload.substring(separator + 1);
+    switch (kind) {
+      case 'focus':
+        router.pushNamed(RouteNames.focus);
+      case 'reminder':
+        router.pushNamed(
+          RouteNames.reminderDetail,
+          pathParameters: {'reminderId': id},
+        );
+    }
   }
 
   @override

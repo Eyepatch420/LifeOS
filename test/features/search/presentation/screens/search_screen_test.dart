@@ -4,10 +4,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/features/navigation/presentation/providers/bottom_nav_providers.dart';
+import 'package:lifeos/features/search/domain/models/searchable_entity.dart';
+import 'package:lifeos/features/search/domain/search_contributor.dart';
+import 'package:lifeos/features/search/domain/search_registry.dart';
+import 'package:lifeos/features/search/presentation/providers/search_registry_provider.dart';
 import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
 
+class _FakeContributor implements SearchContributor {
+  const _FakeContributor(this.entity);
+
+  final SearchableEntity entity;
+
+  @override
+  Stream<List<SearchableEntity>> contributions() => Stream.value([entity]);
+}
+
 void main() {
-  Future<GoRouter> pump(WidgetTester tester) async {
+  Future<GoRouter> pump(
+    WidgetTester tester, {
+    Widget Function(Widget child)? wrap,
+    List<GoRoute> extraRoutes = const [],
+  }) async {
     // The full mock index (notes + lists + up-next + 4 tab placeholders)
     // doesn't fit a default 800x600 test surface, and ListView only builds
     // visible children — grow the surface so every result renders without
@@ -36,10 +53,12 @@ void main() {
           name: RouteNames.search,
           builder: (context, state) => const SearchScreen(),
         ),
+        ...extraRoutes,
       ],
     );
+    final app = MaterialApp.router(routerConfig: router);
     await tester.pumpWidget(
-      ProviderScope(child: MaterialApp.router(routerConfig: router)),
+      wrap != null ? wrap(app) : ProviderScope(child: app),
     );
     await tester.pumpAndSettle();
     return router;
@@ -109,5 +128,51 @@ void main() {
     expect(find.text('Reminders'), findsNothing);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Health'), findsOneWidget);
+  });
+
+  // Regression coverage for the bug where NotesSearchContributor,
+  // ListsSearchContributor, and RemindersSearchContributor all supplied a
+  // real routeName/pathParameters for an existing detail route, but
+  // SearchScreen's tap handler routed those categories into a stale
+  // "no detail screen yet — pop" branch instead of pushing to it.
+  testWidgets('tapping a reminder result pushes the reminder detail route', (
+    tester,
+  ) async {
+    const entity = SearchableEntity(
+      id: 'reminder-abc',
+      title: 'Buy milk',
+      subtitle: 'Due today',
+      icon: Icons.notifications_outlined,
+      category: SearchableEntityCategory.reminder,
+      routeName: RouteNames.reminderDetail,
+      pathParameters: {'reminderId': 'abc'},
+    );
+
+    await pump(
+      tester,
+      wrap: (child) => ProviderScope(
+        overrides: [
+          searchRegistryProvider.overrideWithValue(
+            SearchRegistry([const _FakeContributor(entity)]),
+          ),
+        ],
+        child: child,
+      ),
+      extraRoutes: [
+        GoRoute(
+          path: '/reminders/:reminderId',
+          name: RouteNames.reminderDetail,
+          builder: (context, state) => Scaffold(
+            body: Text('Reminder ${state.pathParameters['reminderId']}'),
+          ),
+        ),
+      ],
+    );
+
+    await tester.tap(find.widgetWithText(ListTile, 'Buy milk'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reminder abc'), findsOneWidget);
+    expect(find.byType(SearchScreen), findsNothing);
   });
 }

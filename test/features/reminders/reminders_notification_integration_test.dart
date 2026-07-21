@@ -31,6 +31,17 @@ class _FakeScheduler implements NotificationScheduler {
   Future<void> cancel(String id) async {
     cancelled.add(id);
   }
+
+  @override
+  Future<void> showOngoing({
+    required String id,
+    required String title,
+    required String body,
+    required DateTime countdownTo,
+  }) async {}
+
+  @override
+  Future<void> cancelOngoing(String id) async {}
 }
 
 /// Exercises the real end-to-end flow this pass introduces:
@@ -124,6 +135,7 @@ void main() {
       dueAt: newDueAt,
       isUrgent: false,
       recurrence: (await repository.getById('r1'))!.recurrence,
+      category: (await repository.getById('r1'))!.category,
     );
     await pumpEventQueue();
 

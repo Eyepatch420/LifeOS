@@ -3,8 +3,8 @@ import 'package:lifeos/features/notifications/domain/notification_contributor.da
 
 /// Lists' contribution to the notification pipeline — proves the fifth
 /// contract piece is wired for Lists. Mirrors `NotesNotificationContributor`
-/// exactly; Lists has nothing schedulable either, so this returns `null`
-/// for every event.
+/// exactly; Lists has nothing schedulable either, so this returns an empty
+/// list for every event.
 class ListsNotificationContributor implements NotificationContributor {
   const ListsNotificationContributor();
 
@@ -12,5 +12,5 @@ class ListsNotificationContributor implements NotificationContributor {
   bool handles(DomainEvent event) => event.sourceModule == 'lists';
 
   @override
-  NotificationIntent? map(DomainEvent event) => null;
+  List<NotificationIntent> map(DomainEvent event) => const [];
 }

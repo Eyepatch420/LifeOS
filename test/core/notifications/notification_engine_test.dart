@@ -13,21 +13,23 @@ class _TestEvent extends DomainEvent {
 
 class _FakeContributor implements NotificationContributor {
   final List<DomainEvent> handled = [];
-  NotificationIntent? Function(DomainEvent event)? onMap;
+  List<NotificationIntent> Function(DomainEvent event)? onMap;
 
   @override
   bool handles(DomainEvent event) => event.sourceModule == 'reminders';
 
   @override
-  NotificationIntent? map(DomainEvent event) {
+  List<NotificationIntent> map(DomainEvent event) {
     handled.add(event);
-    return onMap?.call(event);
+    return onMap?.call(event) ?? const [];
   }
 }
 
 class _FakeScheduler implements NotificationScheduler {
   final List<String> scheduled = [];
   final List<String> cancelled = [];
+  final List<String> ongoingShown = [];
+  final List<String> ongoingCancelled = [];
 
   @override
   Future<void> scheduleAt({
@@ -43,6 +45,21 @@ class _FakeScheduler implements NotificationScheduler {
   @override
   Future<void> cancel(String id) async {
     cancelled.add(id);
+  }
+
+  @override
+  Future<void> showOngoing({
+    required String id,
+    required String title,
+    required String body,
+    required DateTime countdownTo,
+  }) async {
+    ongoingShown.add(id);
+  }
+
+  @override
+  Future<void> cancelOngoing(String id) async {
+    ongoingCancelled.add(id);
   }
 }
 
@@ -77,12 +94,14 @@ void main() {
     'a ScheduleNotification intent schedules and persists a feed row',
     () async {
       final when = DateTime(2026, 1, 1, 9);
-      contributor.onMap = (event) => ScheduleNotification(
-        id: event.sourceId,
-        when: when,
-        title: 'Reminder',
-        body: 'Do the thing',
-      );
+      contributor.onMap = (event) => [
+        ScheduleNotification(
+          id: event.sourceId,
+          when: when,
+          title: 'Reminder',
+          body: 'Do the thing',
+        ),
+      ];
 
       bus.emit(const _TestEvent('r1'));
       await pumpEventQueue();
@@ -99,7 +118,7 @@ void main() {
   test(
     'a CancelNotification intent cancels without persisting a feed row',
     () async {
-      contributor.onMap = (event) => CancelNotification(id: event.sourceId);
+      contributor.onMap = (event) => [CancelNotification(id: event.sourceId)];
 
       bus.emit(const _TestEvent('r1'));
       await pumpEventQueue();
@@ -110,8 +129,53 @@ void main() {
     },
   );
 
+  test(
+    'a ScheduleNotification + ShowOngoingNotification pair (Focus start) '
+    'both act on the same event',
+    () async {
+      final when = DateTime(2026, 1, 1, 9);
+      contributor.onMap = (event) => [
+        ScheduleNotification(
+          id: event.sourceId,
+          when: when,
+          title: 'Focus session complete',
+          body: 'Done',
+        ),
+        ShowOngoingNotification(
+          id: event.sourceId,
+          title: 'Focus session in progress',
+          body: 'Tap to return',
+          countdownTo: when,
+        ),
+      ];
+
+      bus.emit(const _TestEvent('f1'));
+      await pumpEventQueue();
+
+      expect(scheduler.scheduled, ['f1']);
+      expect(scheduler.ongoingShown, ['f1']);
+    },
+  );
+
+  test(
+    'a CancelNotification + CancelOngoingNotification pair (Focus pause) '
+    'both act on the same event',
+    () async {
+      contributor.onMap = (event) => [
+        CancelNotification(id: event.sourceId),
+        CancelOngoingNotification(id: event.sourceId),
+      ];
+
+      bus.emit(const _TestEvent('f1'));
+      await pumpEventQueue();
+
+      expect(scheduler.cancelled, ['f1']);
+      expect(scheduler.ongoingCancelled, ['f1']);
+    },
+  );
+
   test('an event with no schedulable intent is ignored', () async {
-    contributor.onMap = (event) => null;
+    contributor.onMap = (event) => const [];
 
     bus.emit(const _TestEvent('r1'));
     await pumpEventQueue();

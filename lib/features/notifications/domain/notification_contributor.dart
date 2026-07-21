@@ -21,12 +21,14 @@ abstract interface class NotificationContributor {
   /// contributor until one claims the event.
   bool handles(DomainEvent event);
 
-  /// Maps a handled [event] to the notification to schedule/update/cancel.
-  /// Returns `null` for events that don't correspond to a schedulable
-  /// notification (e.g. Notes/Lists have no due-dated concept — they
-  /// implement this interface to satisfy the five-part contract but
-  /// legitimately have nothing to schedule).
-  NotificationIntent? map(DomainEvent event);
+  /// Maps a handled [event] to the notification intent(s) to act on.
+  /// Returns an empty list for events that don't correspond to a
+  /// schedulable notification (e.g. Notes/Lists have no due-dated concept —
+  /// they implement this interface to satisfy the five-part contract but
+  /// legitimately have nothing to schedule). Most events map to exactly one
+  /// intent; a feature like Focus that needs both a completion alarm *and*
+  /// a live ongoing-status notification from the same event returns both.
+  List<NotificationIntent> map(DomainEvent event);
 }
 
 /// What [NotificationEngine] should do in response to one [DomainEvent]:
@@ -61,4 +63,25 @@ class ScheduleNotification extends NotificationIntent {
 
 class CancelNotification extends NotificationIntent {
   const CancelNotification({required super.id});
+}
+
+/// Posts/updates a persistent, silent, OS-rendered live countdown — see
+/// `NotificationScheduler.showOngoing`. Distinct from [ScheduleNotification]:
+/// this never fires "at" a time, it's a status display that exists for as
+/// long as [CancelOngoingNotification] hasn't been issued for the same [id].
+class ShowOngoingNotification extends NotificationIntent {
+  const ShowOngoingNotification({
+    required super.id,
+    required this.title,
+    required this.body,
+    required this.countdownTo,
+  });
+
+  final String title;
+  final String body;
+  final DateTime countdownTo;
+}
+
+class CancelOngoingNotification extends NotificationIntent {
+  const CancelOngoingNotification({required super.id});
 }

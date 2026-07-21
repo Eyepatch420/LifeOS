@@ -36,7 +36,7 @@ class _FakeNotificationContributor implements NotificationContributor {
   bool handles(DomainEvent event) => event.sourceModule == 'fake';
 
   @override
-  NotificationIntent? map(DomainEvent event) => null;
+  List<NotificationIntent> map(DomainEvent event) => const [];
 }
 
 void main() {

@@ -8,6 +8,8 @@ import 'package:lifeos/app.dart';
 import 'package:lifeos/config/di/core_providers.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/core/services/notification_scheduler.dart';
+import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
+import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/user_setup/domain/models/user_profile.dart';
 import 'package:lifeos/features/user_setup/domain/repositories/user_profile_repository.dart';
 import 'package:lifeos/features/user_setup/presentation/providers/user_profile_providers.dart';
@@ -15,6 +17,8 @@ import 'package:lifeos/services/preferences_service.dart';
 import 'package:lifeos/services/secure_storage_service.dart';
 import 'package:lifeos/shared/widgets/nav/floating_bottom_nav.dart';
 import 'package:lifeos/theme/app_color_extension.dart';
+import 'package:lifeos/theme/theme_providers.dart';
+import 'package:lifeos/theme/workspace_theme_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Reports onboarding already complete with a fixed profile, so the
@@ -428,9 +432,8 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('Reminders workspace nav Planner tile opens PlannerScreen', (
-      tester,
-    ) async {
+    testWidgets('Reminders workspace nav Planner tile switches to Planner '
+        'in place, keeping the bottom nav visible', (tester) async {
       await pumpApp(tester);
 
       await tester.tap(find.text('Reminders'));
@@ -438,15 +441,16 @@ void main() {
 
       await tapWorkspaceNavItem(tester, 'Planner');
 
-      // PlannerScreen renders its own workspace nav with Planner active,
-      // its header controls, and no bottom nav (pushed on the root
-      // navigator, same as New/Detail).
+      // Planner's content is now shown inside the SAME persistent
+      // workspace shell — no route push occurred, so the bottom nav
+      // (which only disappears for screens pushed on the root navigator)
+      // stays visible.
       expect(find.text('Today'), findsWidgets);
-      expect(find.byType(FloatingBottomNav), findsNothing);
+      expect(find.byType(FloatingBottomNav), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Planner workspace nav Reminders tile returns to the '
+    testWidgets('Planner workspace nav Reminders tile switches back to the '
         'Reminders dashboard', (tester) async {
       await pumpApp(tester);
 
@@ -460,7 +464,8 @@ void main() {
       expect(find.byType(FloatingBottomNav), findsOneWidget);
     });
 
-    testWidgets('/reminders/planner is not captured by the dynamic '
+    testWidgets('/reminders/planner deep-link redirects into the workspace '
+        'with Planner selected, not captured by the dynamic '
         '/reminders/:reminderId route', (tester) async {
       await pumpApp(tester);
 
@@ -471,8 +476,8 @@ void main() {
       expect(find.text('This reminder no longer exists'), findsNothing);
     });
 
-    testWidgets('Planner -> open a reminder detail -> back returns to '
-        'Planner unchanged', (tester) async {
+    testWidgets('Planner -> open a reminder detail -> back returns to the '
+        'workspace with Planner still selected', (tester) async {
       await pumpApp(tester);
 
       await tester.tap(find.text('Reminders'));
@@ -494,7 +499,7 @@ void main() {
       await tapWorkspaceNavItem(tester, 'Planner');
 
       final plannerController = tester
-          .widget<CustomScrollView>(find.byType(CustomScrollView).last)
+          .widget<CustomScrollView>(find.byType(CustomScrollView))
           .controller!;
       plannerController.jumpTo(plannerController.position.maxScrollExtent);
       await tester.pumpAndSettle();
@@ -519,13 +524,16 @@ void main() {
       await tapAncestorOf(tester, find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
 
+      // Reminder Detail was a genuine pushed page (root navigator), so
+      // popping it returns to the persistent workspace, still showing
+      // Planner — and since the workspace was never torn down, the bottom
+      // nav was visible the whole time on both sides of the push.
       expect(find.text('Today'), findsWidgets);
-      expect(find.byType(FloatingBottomNav), findsNothing);
+      expect(find.byType(FloatingBottomNav), findsOneWidget);
     });
 
-    testWidgets('Planner Add Reminder -> back returns to Planner', (
-      tester,
-    ) async {
+    testWidgets('Planner Add Reminder -> back returns to the workspace with '
+        'Planner still selected', (tester) async {
       await pumpApp(tester);
 
       await tester.tap(find.text('Reminders'));
@@ -533,7 +541,7 @@ void main() {
       await tapWorkspaceNavItem(tester, 'Planner');
 
       final plannerController = tester
-          .widget<CustomScrollView>(find.byType(CustomScrollView).last)
+          .widget<CustomScrollView>(find.byType(CustomScrollView))
           .controller!;
       plannerController.jumpTo(plannerController.position.maxScrollExtent);
       await tester.pumpAndSettle();
@@ -547,6 +555,138 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Today'), findsWidgets);
+      expect(find.byType(FloatingBottomNav), findsOneWidget);
+    });
+  });
+
+  group('Workspace theme ownership (Phase 7.5)', () {
+    /// Reads the live [activeWorkspaceThemeProvider] value through whatever
+    /// widget is currently on screen — works regardless of which branch is
+    /// active since the provider is global.
+    String currentWorkspaceId(WidgetTester tester) {
+      final context = tester.element(find.byType(FloatingBottomNav));
+      return ProviderScope.containerOf(
+        context,
+      ).read(currentWorkspaceProvider);
+    }
+
+    testWidgets(
+      'Reminders -> Search -> Home lands on the Home workspace theme, not '
+      'a leftover Reminders theme',
+      (tester) async {
+        await pumpApp(tester);
+
+        await tester.tap(find.text('Reminders'));
+        await tester.pumpAndSettle();
+        expect(currentWorkspaceId(tester), WorkspaceIds.reminders);
+
+        await tapAncestorOf(tester, find.byIcon(Icons.search));
+        expect(find.text('Search'), findsOneWidget);
+
+        // Search's Home result switches the shell branch via goNamed,
+        // which never called setWorkspace() directly — only AppShell's own
+        // sync (keyed off navigationShell.currentIndex) should update it.
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(FloatingBottomNav), findsOneWidget);
+        expect(currentWorkspaceId(tester), WorkspaceIds.home);
+      },
+    );
+
+    testWidgets(
+      'Home -> Search -> Reminders lands on the Reminders workspace theme',
+      (tester) async {
+        await pumpApp(tester);
+        expect(currentWorkspaceId(tester), WorkspaceIds.home);
+
+        await tapAncestorOf(tester, find.byIcon(Icons.search));
+        await tester.tap(find.text('Reminders'));
+        await tester.pumpAndSettle();
+
+        expect(currentWorkspaceId(tester), WorkspaceIds.reminders);
+      },
+    );
+
+    testWidgets(
+      'bottom nav still switches the workspace theme correctly after a '
+      'Search cross-workspace navigation',
+      (tester) async {
+        await pumpApp(tester);
+
+        await tester.tap(find.text('Reminders'));
+        await tester.pumpAndSettle();
+        await tapAncestorOf(tester, find.byIcon(Icons.search));
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+        expect(currentWorkspaceId(tester), WorkspaceIds.home);
+
+        await tester.tap(find.text('Health'));
+        await tester.pumpAndSettle();
+        expect(currentWorkspaceId(tester), WorkspaceIds.health);
+
+        await tester.tap(find.text('Finance'));
+        await tester.pumpAndSettle();
+        expect(currentWorkspaceId(tester), WorkspaceIds.finance);
+      },
+    );
+  });
+
+  group('Notification tap deep-link routing (Phase 7.5)', () {
+    testWidgets(
+      'a reminder:<id> tap payload pushes that reminder\'s detail screen '
+      'on top of Home, and Back returns to Home',
+      (tester) async {
+        await pumpApp(tester);
+
+        // Create a real reminder so its detail route resolves instead of
+        // hitting the "no longer exists" fallback.
+        await tester.tap(find.text('Reminders'));
+        await tester.pumpAndSettle();
+        final scrollController = tester
+            .widget<CustomScrollView>(find.byType(CustomScrollView))
+            .controller!;
+        scrollController.jumpTo(300);
+        await tester.pump();
+        await tester.tap(find.text('Add Reminder'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), 'Call the vet');
+        await tester.tap(find.text('Save Reminder'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Home'));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(FloatingBottomNav));
+        final container = ProviderScope.containerOf(context);
+        final reminder = (await container
+                .read(remindersRepositoryProvider)
+                .watchAll()
+                .first)
+            .single;
+
+        // Simulates a tap on a delivered notification — the same stream
+        // every real foreground/background/cold-start tap goes through
+        // (see notification_tap_dispatcher.dart).
+        notificationTapDispatcher.dispatch('reminder:${reminder.id}');
+        await tester.pumpAndSettle();
+
+        expect(find.text('Call the vet'), findsWidgets);
+        expect(find.byType(FloatingBottomNav), findsNothing);
+
+        await tapAncestorOf(tester, find.byIcon(Icons.arrow_back));
+        expect(find.byType(FloatingBottomNav), findsOneWidget);
+      },
+    );
+
+    testWidgets('an unrecognized tap payload is ignored without navigating '
+        'or throwing', (tester) async {
+      await pumpApp(tester);
+
+      notificationTapDispatcher.dispatch('unknown-kind:xyz');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FloatingBottomNav), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

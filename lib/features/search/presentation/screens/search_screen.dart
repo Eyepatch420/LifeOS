@@ -26,13 +26,14 @@ class SearchScreen extends ConsumerWidget {
       case SearchableEntityCategory.documents:
       case SearchableEntityCategory.settings:
         context.goNamed(e.routeName);
+      case SearchableEntityCategory.upNext:
+        // No contributor currently emits this category — no detail screen
+        // to route to, so fall back to Home where the matching section is
+        // visible.
+        context.pop();
       case SearchableEntityCategory.note:
       case SearchableEntityCategory.list:
-      case SearchableEntityCategory.upNext:
       case SearchableEntityCategory.reminder:
-        // No detail screen exists yet for these categories — pop back to
-        // Home, where the matching section is already visible.
-        context.pop();
       case SearchableEntityCategory.habit:
       case SearchableEntityCategory.calendar:
         context.pushNamed(e.routeName, pathParameters: e.pathParameters!);
