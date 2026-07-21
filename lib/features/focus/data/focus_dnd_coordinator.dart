@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:lifeos/core/constants/pref_keys.dart';
 import 'package:lifeos/core/events/domain_event.dart';
 import 'package:lifeos/core/events/event_bus.dart';
@@ -54,19 +53,27 @@ class FocusDndCoordinator {
     // restore hasn't run yet) — don't overwrite it with DND's own filter,
     // or the eventual restore would leave DND stuck on.
     if (preferences.getString(PrefKeys.focusDndPriorFilter) != null) return;
-    if (!await dnd.isPolicyAccessGranted()) return;
 
+    // The whole DND platform channel is wrapped in one try/catch, not just
+    // the final write — isPolicyAccessGranted()/getInterruptionFilter() can
+    // throw a PlatformException/MissingPluginException just as easily as
+    // setInterruptionFilter() (no channel handler registered, plugin not
+    // available on this platform, ...). This is a pure side effect on top
+    // of Focus, never allowed to propagate and disrupt the session itself.
     try {
+      if (!await dnd.isPolicyAccessGranted()) return;
       final current = await dnd.getInterruptionFilter();
       await preferences.setString(
         PrefKeys.focusDndPriorFilter,
         current.index.toString(),
       );
       await dnd.setInterruptionFilter(InterruptionFilter.priority);
-    } on PlatformException {
-      // Policy access was revoked between the check above and this call,
-      // or some other platform-level failure — Focus must keep working
-      // regardless, so this is swallowed rather than rethrown.
+    } on Object {
+      // Covers both PlatformException (policy access revoked between the
+      // check above and this call, or another platform-level failure) and
+      // MissingPluginException (no handler registered for this channel at
+      // all — e.g. a platform/test environment with no MainActivity
+      // channel wired up). Either way, DND is best-effort.
     }
   }
 
@@ -75,14 +82,15 @@ class FocusDndCoordinator {
     if (storedIndex == null) return;
     await preferences.remove(PrefKeys.focusDndPriorFilter);
 
-    if (!await dnd.isPolicyAccessGranted()) return;
     try {
+      if (!await dnd.isPolicyAccessGranted()) return;
       final filter = InterruptionFilter.values[int.parse(storedIndex)];
       await dnd.setInterruptionFilter(filter);
-    } on PlatformException {
+    } on Object {
       // Nothing more this coordinator can safely do — the prior-filter key
       // is already cleared above so a later reconciliation won't loop on
-      // this permanently-failing restore.
+      // this permanently-failing restore. Covers PlatformException and
+      // MissingPluginException — see _enable()'s doc comment.
     }
   }
 

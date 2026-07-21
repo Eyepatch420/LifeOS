@@ -62,13 +62,20 @@ const List<String> _workspaceIdByIndex = [
 ///   Home's root, not resume a mid-note-editing state from earlier).
 /// - At Home's own root, `canPop` is true and the pop is allowed through
 ///   to the OS, exiting the app on Android (a no-op back gesture on iOS).
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  String? _lastSyncedWorkspaceId;
+
+  @override
+  Widget build(BuildContext context) {
     // Workspace/theme ownership lives here, not at individual navigation
     // call sites (bottom nav, Search, notification taps, deep links). This
     // build method runs on every branch change regardless of *how* the
@@ -79,8 +86,18 @@ class AppShell extends ConsumerWidget {
     // call `setWorkspace()` itself; Search's `goNamed` calls didn't, which
     // left the workspace theme stuck on the previous tab after navigating
     // through Search into a different workspace.
-    final workspaceId = _workspaceIdByIndex[navigationShell.currentIndex];
-    if (ref.read(currentWorkspaceProvider) != workspaceId) {
+    //
+    // `_lastSyncedWorkspaceId` (not a provider re-read) guards the
+    // microtask scheduling: `AppShell` stays mounted (its branches are
+    // preserved via `IndexedStack`) even while a root-navigator screen is
+    // pushed on top of it, so it keeps rebuilding on every unrelated
+    // provider change in the tree — re-reading `currentWorkspaceProvider`
+    // here on each of those rebuilds and comparing against a value this
+    // same microtask is about to set is what previously re-scheduled a new
+    // microtask every single frame indefinitely.
+    final workspaceId = _workspaceIdByIndex[widget.navigationShell.currentIndex];
+    if (_lastSyncedWorkspaceId != workspaceId) {
+      _lastSyncedWorkspaceId = workspaceId;
       Future.microtask(
         () => ref.read(currentWorkspaceProvider.notifier).setWorkspace(workspaceId),
       );
@@ -88,23 +105,23 @@ class AppShell extends ConsumerWidget {
 
     return BiometricGate(
       child: PopScope(
-        canPop: navigationShell.currentIndex == 0,
+        canPop: widget.navigationShell.currentIndex == 0,
         onPopInvokedWithResult: (didPop, result) {
           if (didPop) return;
           ref.read(bottomNavIndexProvider.notifier).setIndex(0);
-          navigationShell.goBranch(0, initialLocation: true);
+          widget.navigationShell.goBranch(0, initialLocation: true);
         },
         child: Scaffold(
           extendBody: true,
-          body: navigationShell,
+          body: widget.navigationShell,
           bottomNavigationBar: FloatingBottomNav(
             items: _navItems,
-            currentIndex: navigationShell.currentIndex,
+            currentIndex: widget.navigationShell.currentIndex,
             onTap: (index) {
               ref.read(bottomNavIndexProvider.notifier).setIndex(index);
-              navigationShell.goBranch(
+              widget.navigationShell.goBranch(
                 index,
-                initialLocation: index == navigationShell.currentIndex,
+                initialLocation: index == widget.navigationShell.currentIndex,
               );
             },
           ),
