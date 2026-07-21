@@ -30,7 +30,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// synchronized because they're driven by the same
 /// [FocusRepository]-emitted events either isolate would produce.
 @pragma('vm:entry-point')
-Future<void> handleFocusNotificationAction(NotificationResponse response) async {
+Future<void> handleFocusNotificationAction(
+  NotificationResponse response,
+) async {
   final actionId = response.actionId;
   if (actionId == null) return;
   final parts = actionId.split(':');
@@ -43,7 +45,9 @@ Future<void> handleFocusNotificationAction(NotificationResponse response) async 
   const clock = SystemClockManager();
   final repository = FocusRepository(db.focusSessionsDao, eventBus, clock);
 
-  final scheduler = LocalNotificationScheduler(FlutterLocalNotificationsPlugin());
+  final scheduler = LocalNotificationScheduler(
+    FlutterLocalNotificationsPlugin(),
+  );
   await scheduler.initialize();
   final preferences = PreferencesService(await SharedPreferences.getInstance());
 
@@ -80,7 +84,9 @@ Future<void> handleFocusNotificationAction(NotificationResponse response) async 
     // user next opens the app, where FocusController/FocusDndCoordinator's
     // own startup reconciliation catches up. Never let this crash the
     // isolate silently without at least a debug trace.
-    debugPrint('handleFocusNotificationAction($kind) failed: $error\n$stackTrace');
+    debugPrint(
+      'handleFocusNotificationAction($kind) failed: $error\n$stackTrace',
+    );
   } finally {
     engine.dispose();
     dndCoordinator.dispose();

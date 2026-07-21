@@ -583,9 +583,7 @@ void main() {
     /// active since the provider is global.
     String currentWorkspaceId(WidgetTester tester) {
       final context = tester.element(find.byType(FloatingBottomNav));
-      return ProviderScope.containerOf(
-        context,
-      ).read(currentWorkspaceProvider);
+      return ProviderScope.containerOf(context).read(currentWorkspaceProvider);
     }
 
     testWidgets(

@@ -64,28 +64,52 @@ void main() {
     eventBus.dispose();
   });
 
-  FocusDndCoordinator build() =>
-      FocusDndCoordinator(eventBus: eventBus, dnd: dnd, preferences: preferences);
+  FocusDndCoordinator build() => FocusDndCoordinator(
+    eventBus: eventBus,
+    dnd: dnd,
+    preferences: preferences,
+  );
 
-  test('does nothing on session start when the user has not opted in', () async {
-    final coordinator = build();
+  test(
+    'does nothing on session start when the user has not opted in',
+    () async {
+      final coordinator = build();
+      fakeChannel.currentFilter = InterruptionFilter.all;
+
+      eventBus.emit(
+        FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
+      );
+      await pumpEventQueue();
+
+      expect(fakeChannel.setFilterCalls, isEmpty);
+      coordinator.dispose();
+    },
+  );
+
+  test('enables priority-only DND on start when opted in and policy access is '
+      'granted, recording the prior filter for restore', () async {
+    await preferences.setBool(PrefKeys.focusDndOptIn, true);
     fakeChannel.currentFilter = InterruptionFilter.all;
+    final coordinator = build();
 
     eventBus.emit(
       FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
     );
     await pumpEventQueue();
 
-    expect(fakeChannel.setFilterCalls, isEmpty);
+    expect(fakeChannel.setFilterCalls, [InterruptionFilter.priority]);
+    expect(
+      preferences.getString(PrefKeys.focusDndPriorFilter),
+      InterruptionFilter.all.index.toString(),
+    );
     coordinator.dispose();
   });
 
   test(
-    'enables priority-only DND on start when opted in and policy access is '
-    'granted, recording the prior filter for restore',
+    'does nothing when opted in but policy access was never granted',
     () async {
       await preferences.setBool(PrefKeys.focusDndOptIn, true);
-      fakeChannel.currentFilter = InterruptionFilter.all;
+      fakeChannel.policyAccessGranted = false;
       final coordinator = build();
 
       eventBus.emit(
@@ -93,28 +117,10 @@ void main() {
       );
       await pumpEventQueue();
 
-      expect(fakeChannel.setFilterCalls, [InterruptionFilter.priority]);
-      expect(
-        preferences.getString(PrefKeys.focusDndPriorFilter),
-        InterruptionFilter.all.index.toString(),
-      );
+      expect(fakeChannel.setFilterCalls, isEmpty);
       coordinator.dispose();
     },
   );
-
-  test('does nothing when opted in but policy access was never granted', () async {
-    await preferences.setBool(PrefKeys.focusDndOptIn, true);
-    fakeChannel.policyAccessGranted = false;
-    final coordinator = build();
-
-    eventBus.emit(
-      FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
-    );
-    await pumpEventQueue();
-
-    expect(fakeChannel.setFilterCalls, isEmpty);
-    coordinator.dispose();
-  });
 
   test('restores the recorded prior filter on pause', () async {
     await preferences.setBool(PrefKeys.focusDndOptIn, true);
@@ -135,39 +141,39 @@ void main() {
     coordinator.dispose();
   });
 
-  test('restores the recorded prior filter on complete and on cancel', () async {
-    await preferences.setBool(PrefKeys.focusDndOptIn, true);
-    final coordinator = build();
-
-    eventBus.emit(
-      FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
-    );
-    await pumpEventQueue();
-    eventBus.emit(const FocusSessionCompleted(sessionId: 's1'));
-    await pumpEventQueue();
-
-    expect(preferences.getString(PrefKeys.focusDndPriorFilter), isNull);
-    expect(fakeChannel.setFilterCalls.last, InterruptionFilter.all);
-    coordinator.dispose();
-  });
-
   test(
-    'reconcileOnStartup restores DND if a prior-filter record was left '
-    'behind by a crash/kill, without needing a live Focus session',
+    'restores the recorded prior filter on complete and on cancel',
     () async {
-      await preferences.setString(
-        PrefKeys.focusDndPriorFilter,
-        InterruptionFilter.priority.index.toString(),
-      );
+      await preferences.setBool(PrefKeys.focusDndOptIn, true);
       final coordinator = build();
 
-      await coordinator.reconcileOnStartup();
+      eventBus.emit(
+        FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
+      );
+      await pumpEventQueue();
+      eventBus.emit(const FocusSessionCompleted(sessionId: 's1'));
+      await pumpEventQueue();
 
-      expect(fakeChannel.setFilterCalls, [InterruptionFilter.priority]);
       expect(preferences.getString(PrefKeys.focusDndPriorFilter), isNull);
+      expect(fakeChannel.setFilterCalls.last, InterruptionFilter.all);
       coordinator.dispose();
     },
   );
+
+  test('reconcileOnStartup restores DND if a prior-filter record was left '
+      'behind by a crash/kill, without needing a live Focus session', () async {
+    await preferences.setString(
+      PrefKeys.focusDndPriorFilter,
+      InterruptionFilter.priority.index.toString(),
+    );
+    final coordinator = build();
+
+    await coordinator.reconcileOnStartup();
+
+    expect(fakeChannel.setFilterCalls, [InterruptionFilter.priority]);
+    expect(preferences.getString(PrefKeys.focusDndPriorFilter), isNull);
+    coordinator.dispose();
+  });
 
   test('reconcileOnStartup is a no-op when nothing was left stuck', () async {
     final coordinator = build();
@@ -178,31 +184,28 @@ void main() {
     coordinator.dispose();
   });
 
-  test(
-    'a resume immediately after start does not overwrite the already-'
-    'recorded prior filter with DND\'s own filter',
-    () async {
-      await preferences.setBool(PrefKeys.focusDndOptIn, true);
-      fakeChannel.currentFilter = InterruptionFilter.alarms;
-      final coordinator = build();
+  test('a resume immediately after start does not overwrite the already-'
+      'recorded prior filter with DND\'s own filter', () async {
+    await preferences.setBool(PrefKeys.focusDndOptIn, true);
+    fakeChannel.currentFilter = InterruptionFilter.alarms;
+    final coordinator = build();
 
-      eventBus.emit(
-        FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
-      );
-      await pumpEventQueue();
-      eventBus.emit(
-        FocusSessionResumed(sessionId: 's1', projectedEndAt: DateTime(2026)),
-      );
-      await pumpEventQueue();
+    eventBus.emit(
+      FocusSessionStarted(sessionId: 's1', projectedEndAt: DateTime(2026)),
+    );
+    await pumpEventQueue();
+    eventBus.emit(
+      FocusSessionResumed(sessionId: 's1', projectedEndAt: DateTime(2026)),
+    );
+    await pumpEventQueue();
 
-      // Still records the original 'alarms' filter, not 'priority' (DND's
-      // own filter, which is what currentFilter became after the first
-      // _enable call).
-      expect(
-        preferences.getString(PrefKeys.focusDndPriorFilter),
-        InterruptionFilter.alarms.index.toString(),
-      );
-      coordinator.dispose();
-    },
-  );
+    // Still records the original 'alarms' filter, not 'priority' (DND's
+    // own filter, which is what currentFilter became after the first
+    // _enable call).
+    expect(
+      preferences.getString(PrefKeys.focusDndPriorFilter),
+      InterruptionFilter.alarms.index.toString(),
+    );
+    coordinator.dispose();
+  });
 }

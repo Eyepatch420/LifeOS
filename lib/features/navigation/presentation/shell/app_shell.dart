@@ -95,11 +95,14 @@ class _AppShellState extends ConsumerState<AppShell> {
     // here on each of those rebuilds and comparing against a value this
     // same microtask is about to set is what previously re-scheduled a new
     // microtask every single frame indefinitely.
-    final workspaceId = _workspaceIdByIndex[widget.navigationShell.currentIndex];
+    final workspaceId =
+        _workspaceIdByIndex[widget.navigationShell.currentIndex];
     if (_lastSyncedWorkspaceId != workspaceId) {
       _lastSyncedWorkspaceId = workspaceId;
       Future.microtask(
-        () => ref.read(currentWorkspaceProvider.notifier).setWorkspace(workspaceId),
+        () => ref
+            .read(currentWorkspaceProvider.notifier)
+            .setWorkspace(workspaceId),
       );
     }
 

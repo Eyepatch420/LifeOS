@@ -338,8 +338,7 @@ class _TodaySummary extends StatelessWidget {
     final label = summary.todayFocusedDuration.toShortLabel;
 
     return Semantics(
-      label:
-          "Today's focus: $completedToday sessions, $label focused",
+      label: "Today's focus: $completedToday sessions, $label focused",
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -397,8 +396,8 @@ class _HistoryTile extends StatelessWidget {
     final icon = switch (session.status) {
       FocusSessionStatus.completed => Icons.check_circle_outline,
       FocusSessionStatus.cancelled => Icons.cancel_outlined,
-      FocusSessionStatus.running || FocusSessionStatus.paused =>
-        Icons.flag_outlined,
+      FocusSessionStatus.running ||
+      FocusSessionStatus.paused => Icons.flag_outlined,
     };
     final timeLabel = DateFormat('h:mm a').format(session.startedAt);
 
@@ -524,9 +523,7 @@ class _ActiveFocusView extends StatelessWidget {
           SafeArea(
             child: FadeSlideIn(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -553,9 +550,7 @@ class _ActiveFocusView extends StatelessWidget {
                             ),
                           ),
                         ),
-                        _DurationBadge(
-                          plannedMinutes: session.plannedMinutes,
-                        ),
+                        _DurationBadge(plannedMinutes: session.plannedMinutes),
                       ],
                     ),
                     const Spacer(),

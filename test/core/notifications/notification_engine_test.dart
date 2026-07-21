@@ -132,50 +132,44 @@ void main() {
     },
   );
 
-  test(
-    'a ScheduleNotification + ShowOngoingNotification pair (Focus start) '
-    'both act on the same event',
-    () async {
-      final when = DateTime(2026, 1, 1, 9);
-      contributor.onMap = (event) => [
-        ScheduleNotification(
-          id: event.sourceId,
-          when: when,
-          title: 'Focus session complete',
-          body: 'Done',
-        ),
-        ShowOngoingNotification(
-          id: event.sourceId,
-          title: 'Focus session in progress',
-          body: 'Tap to return',
-          countdownTo: when,
-        ),
-      ];
+  test('a ScheduleNotification + ShowOngoingNotification pair (Focus start) '
+      'both act on the same event', () async {
+    final when = DateTime(2026, 1, 1, 9);
+    contributor.onMap = (event) => [
+      ScheduleNotification(
+        id: event.sourceId,
+        when: when,
+        title: 'Focus session complete',
+        body: 'Done',
+      ),
+      ShowOngoingNotification(
+        id: event.sourceId,
+        title: 'Focus session in progress',
+        body: 'Tap to return',
+        countdownTo: when,
+      ),
+    ];
 
-      bus.emit(const _TestEvent('f1'));
-      await pumpEventQueue();
+    bus.emit(const _TestEvent('f1'));
+    await pumpEventQueue();
 
-      expect(scheduler.scheduled, ['f1']);
-      expect(scheduler.ongoingShown, ['f1']);
-    },
-  );
+    expect(scheduler.scheduled, ['f1']);
+    expect(scheduler.ongoingShown, ['f1']);
+  });
 
-  test(
-    'a CancelNotification + CancelOngoingNotification pair (Focus pause) '
-    'both act on the same event',
-    () async {
-      contributor.onMap = (event) => [
-        CancelNotification(id: event.sourceId),
-        CancelOngoingNotification(id: event.sourceId),
-      ];
+  test('a CancelNotification + CancelOngoingNotification pair (Focus pause) '
+      'both act on the same event', () async {
+    contributor.onMap = (event) => [
+      CancelNotification(id: event.sourceId),
+      CancelOngoingNotification(id: event.sourceId),
+    ];
 
-      bus.emit(const _TestEvent('f1'));
-      await pumpEventQueue();
+    bus.emit(const _TestEvent('f1'));
+    await pumpEventQueue();
 
-      expect(scheduler.cancelled, ['f1']);
-      expect(scheduler.ongoingCancelled, ['f1']);
-    },
-  );
+    expect(scheduler.cancelled, ['f1']);
+    expect(scheduler.ongoingCancelled, ['f1']);
+  });
 
   test('an event with no schedulable intent is ignored', () async {
     contributor.onMap = (event) => const [];

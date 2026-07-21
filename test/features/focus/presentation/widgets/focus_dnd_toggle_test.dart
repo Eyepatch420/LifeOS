@@ -34,9 +34,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [preferencesServiceProvider.overrideWithValue(prefs)],
-        child: const MaterialApp(
-          home: Scaffold(body: FocusDndToggle()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: FocusDndToggle())),
       ),
     );
     await tester.pumpAndSettle();
@@ -77,19 +75,14 @@ void main() {
       await tester.tap(find.byType(SwitchListTile));
       await tester.pumpAndSettle();
 
-      expect(
-        calls.map((c) => c.method),
-        contains('openPolicyAccessSettings'),
-      );
+      expect(calls.map((c) => c.method), contains('openPolicyAccessSettings'));
     },
   );
 
   testWidgets('reflects a previously persisted opt-in on rebuild', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({
-      PrefKeys.focusDndOptIn: true,
-    });
+    SharedPreferences.setMockInitialValues({PrefKeys.focusDndOptIn: true});
     final prefs = PreferencesService(await SharedPreferences.getInstance());
     const channel = MethodChannel('com.lifeos/dnd');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -102,9 +95,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [preferencesServiceProvider.overrideWithValue(prefs)],
-        child: const MaterialApp(
-          home: Scaffold(body: FocusDndToggle()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: FocusDndToggle())),
       ),
     );
     await tester.pumpAndSettle();
