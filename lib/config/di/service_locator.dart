@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lifeos/config/di/background_notification_action_registration.dart';
 import 'package:lifeos/core/database/app_database.dart';
 import 'package:lifeos/core/services/background_service.dart';
 import 'package:lifeos/core/services/clock_manager.dart';
@@ -33,7 +34,9 @@ Future<void> setupServiceLocator() async {
       final scheduler = LocalNotificationScheduler(
         FlutterLocalNotificationsPlugin(),
       );
-      await scheduler.initialize();
+      await scheduler.initialize(
+        onBackgroundAction: handleBackgroundNotificationAction,
+      );
       // Must run after `initialize()` (registers the tap callbacks) so a
       // cold-start payload is forwarded through the same
       // `notificationTapDispatcher` stream those callbacks use — see

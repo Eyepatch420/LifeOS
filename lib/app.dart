@@ -7,6 +7,7 @@ import 'package:lifeos/config/router/route_paths.dart';
 import 'package:lifeos/core/animations/durations.dart';
 import 'package:lifeos/core/notifications/notification_engine_provider.dart';
 import 'package:lifeos/core/services/notification_tap_dispatcher.dart';
+import 'package:lifeos/features/focus/data/focus_dnd_coordinator_provider.dart';
 import 'package:lifeos/theme/app_theme.dart';
 import 'package:lifeos/theme/theme_providers.dart';
 
@@ -28,6 +29,12 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> {
     // `notification_tap_dispatcher.dart`'s doc comment for how each is
     // funneled into this same stream.
     _tapSubscription = notificationTapDispatcher.taps.listen(_handleTap);
+    // If the app was killed/crashed mid-Focus-session with DND active,
+    // this is what actually turns it back off — see
+    // FocusDndCoordinator.reconcileOnStartup's doc comment. Independent of
+    // FocusController's own reconciliation (that's about session state,
+    // this is about a stuck system side effect).
+    ref.read(focusDndCoordinatorProvider).reconcileOnStartup();
   }
 
   @override

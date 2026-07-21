@@ -43,6 +43,8 @@ class FocusNotificationContributor implements NotificationContributor {
           title: 'Focus session in progress',
           body: 'Tap to return to your session',
           countdownTo: projectedEndAt,
+          showPauseAction: true,
+          showEndAction: true,
         ),
       ],
       FocusSessionResumed(sourceId: final id, :final projectedEndAt) => [
@@ -58,6 +60,8 @@ class FocusNotificationContributor implements NotificationContributor {
           title: 'Focus session in progress',
           body: 'Tap to return to your session',
           countdownTo: projectedEndAt,
+          showPauseAction: true,
+          showEndAction: true,
         ),
       ],
       // Paused: the completion alarm is cancelled (a paused session must

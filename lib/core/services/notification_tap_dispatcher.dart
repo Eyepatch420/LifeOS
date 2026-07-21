@@ -40,7 +40,27 @@ class NotificationTapDispatcher {
     _controller.add(payload);
   }
 
-  void dispose() => _controller.close();
+  /// A tapped notification *action* (Pause/Resume/End on the ongoing Focus
+  /// notification) rather than the notification body itself. [actionId] is
+  /// whatever [AndroidNotificationAction.id] the action was posted with —
+  /// see `LocalNotificationScheduler.showOngoing`'s `action:<kind>:<id>`
+  /// convention. Kept on a separate stream from [taps]: an action is meant
+  /// to be handled silently (see `focus_action_entrypoint.dart`), while a
+  /// body tap is meant to navigate — merging them would force every
+  /// consumer to re-derive which case it got.
+  void dispatchAction(String? actionId) {
+    if (actionId == null || actionId.isEmpty) return;
+    _actionController.add(actionId);
+  }
+
+  final _actionController = StreamController<String>.broadcast();
+
+  Stream<String> get actions => _actionController.stream;
+
+  void dispose() {
+    _controller.close();
+    _actionController.close();
+  }
 }
 
 /// Process-wide singleton — required because
@@ -49,18 +69,23 @@ class NotificationTapDispatcher {
 /// cannot close over an instance the way a normal callback could. Every
 /// other caller (`LocalNotificationScheduler`, `app.dart`) goes through
 /// this same instance rather than each holding their own.
+///
+/// NOTE: this specific instance is only ever meaningfully observed in the
+/// **foreground** app isolate. [handleBackgroundNotificationResponse] below
+/// runs in a plugin-spawned background isolate/engine with its own fresh
+/// memory — writes to this controller from there are inert (nothing in
+/// that isolate is listening), which is why that handler does not call
+/// into this dispatcher at all; see its own doc comment.
 final notificationTapDispatcher = NotificationTapDispatcher();
 
-/// Top-level background-response handler, registered with
-/// `FlutterLocalNotificationsPlugin.initialize`. Required to be a
-/// top-level/static function (never a closure) by the plugin's own
-/// contract, and annotated `vm:entry-point` so it survives tree-shaking
-/// when invoked from a background isolate. Deliberately does the bare
-/// minimum (forward the payload) — anything heavier here risks running
-/// with no guarantee of a live app UI to route into; the actual routing
-/// only ever happens once [NotificationTapDispatcher.taps] is observed by
-/// `app.dart` in the foreground isolate.
+/// Top-level fallback background-response handler. Only reachable if a
+/// background action notification was posted through some path that
+/// doesn't override this — in this app, every notification with
+/// `showsUserInterface: false` (currently only the Focus ongoing
+/// notification's Pause/Resume/End actions) registers
+/// `handleFocusNotificationAction` (`focus_action_entrypoint.dart`)
+/// directly at plugin-initialize time instead, so this one is a defensive
+/// no-op rather than the live path — see `notification_scheduler.dart`'s
+/// `initialize()` for which function is actually registered.
 @pragma('vm:entry-point')
-void handleBackgroundNotificationResponse(NotificationResponse response) {
-  notificationTapDispatcher.dispatch(response.payload);
-}
+void handleBackgroundNotificationResponse(NotificationResponse response) {}

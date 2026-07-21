@@ -30,11 +30,23 @@ abstract interface class NotificationScheduler {
   /// remains [scheduleAt]'s job) and never becomes a timing source of
   /// truth — the countdown is Android's own Chronometer view rendering
   /// [countdownTo], not anything this app ticks.
+  ///
+  /// [showPauseAction]/[showResumeAction]/[showEndAction] control which
+  /// notification actions appear — the caller decides based on the
+  /// session's actual persisted status (e.g. don't show "Pause" on an
+  /// already-paused session), so this stays a pure display call with no
+  /// session-state knowledge of its own. Actions are delivered back through
+  /// [NotificationTapDispatcher] the same way a tap is, prefixed
+  /// `action:<actionId>:` ahead of the normal payload — see
+  /// `focus_action_entrypoint.dart`.
   Future<void> showOngoing({
     required String id,
     required String title,
     required String body,
     required DateTime countdownTo,
+    bool showPauseAction = false,
+    bool showResumeAction = false,
+    bool showEndAction = false,
   });
 
   /// Removes a notification previously posted by [showOngoing]. Safe to
@@ -63,6 +75,9 @@ class NoopNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     required DateTime countdownTo,
+    bool showPauseAction = false,
+    bool showResumeAction = false,
+    bool showEndAction = false,
   }) async {}
 
   @override
@@ -115,7 +130,22 @@ class LocalNotificationScheduler implements NotificationScheduler {
   /// supports (foreground/background here; [consumeLaunchPayload] handles
   /// cold start separately since it needs an app-startup call site, not an
   /// `initialize`-time callback).
-  Future<void> initialize() async {
+  ///
+  /// [onBackgroundAction] handles a notification action tapped while the
+  /// app isn't running in the foreground (`showsUserInterface: false`,
+  /// currently only the Focus ongoing notification's Pause/Resume/End) —
+  /// injected by the composition root
+  /// (`config/di/background_notification_action_registration.dart`) rather
+  /// than hardcoded here, so this feature-agnostic `core/` service never
+  /// imports Focus's types (Golden Rule). Must itself be a top-level
+  /// function — see that file's doc comment for why. Defaults to the
+  /// dispatcher-based [handleBackgroundNotificationResponse] no-op for
+  /// callers (tests, a future scheduler with no ongoing notifications) that
+  /// don't need it.
+  Future<void> initialize({
+    void Function(NotificationResponse response) onBackgroundAction =
+        handleBackgroundNotificationResponse,
+  }) async {
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.local);
 
@@ -125,10 +155,14 @@ class LocalNotificationScheduler implements NotificationScheduler {
     const settings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(
       settings,
-      onDidReceiveNotificationResponse: (response) =>
-          notificationTapDispatcher.dispatch(response.payload),
-      onDidReceiveBackgroundNotificationResponse:
-          handleBackgroundNotificationResponse,
+      onDidReceiveNotificationResponse: (response) {
+        if (response.actionId != null) {
+          notificationTapDispatcher.dispatchAction(response.actionId);
+        } else {
+          notificationTapDispatcher.dispatch(response.payload);
+        }
+      },
+      onDidReceiveBackgroundNotificationResponse: onBackgroundAction,
     );
 
     final android = _plugin
@@ -251,7 +285,36 @@ class LocalNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     required DateTime countdownTo,
+    bool showPauseAction = false,
+    bool showResumeAction = false,
+    bool showEndAction = false,
   }) async {
+    // showsUserInterface: false is what makes Android deliver the tap via
+    // the background-isolate path (handleBackgroundNotificationResponse)
+    // instead of opening/foregrounding the app — see
+    // focus_action_entrypoint.dart, which is where these action ids are
+    // consumed. The `action:<id>:` payload prefix distinguishes an action
+    // tap from a plain notification-body tap in the same dispatcher stream.
+    final actions = <AndroidNotificationAction>[
+      if (showPauseAction)
+        AndroidNotificationAction(
+          'action:pause:$id',
+          'Pause',
+          showsUserInterface: false,
+        ),
+      if (showResumeAction)
+        AndroidNotificationAction(
+          'action:resume:$id',
+          'Resume',
+          showsUserInterface: false,
+        ),
+      if (showEndAction)
+        AndroidNotificationAction(
+          'action:end:$id',
+          'End',
+          showsUserInterface: false,
+        ),
+    ];
     final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _ongoingChannelId,
@@ -275,6 +338,7 @@ class LocalNotificationScheduler implements NotificationScheduler {
         // killed or backgrounded, unlike a Dart Timer rewriting the
         // notification every second.
         when: countdownTo.millisecondsSinceEpoch,
+        actions: actions,
       ),
     );
     await _plugin.show(_ongoingIntId(id), title, body, details);

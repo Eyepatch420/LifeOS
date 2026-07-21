@@ -53,6 +53,9 @@ class _FakeScheduler implements NotificationScheduler {
     required String title,
     required String body,
     required DateTime countdownTo,
+    bool showPauseAction = false,
+    bool showResumeAction = false,
+    bool showEndAction = false,
   }) async {
     ongoingShown.add(id);
   }

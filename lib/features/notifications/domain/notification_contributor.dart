@@ -75,11 +75,17 @@ class ShowOngoingNotification extends NotificationIntent {
     required this.title,
     required this.body,
     required this.countdownTo,
+    this.showPauseAction = false,
+    this.showResumeAction = false,
+    this.showEndAction = false,
   });
 
   final String title;
   final String body;
   final DateTime countdownTo;
+  final bool showPauseAction;
+  final bool showResumeAction;
+  final bool showEndAction;
 }
 
 class CancelOngoingNotification extends NotificationIntent {

@@ -13,6 +13,7 @@ import 'package:lifeos/features/focus/domain/entities/focus_visual_stage.dart';
 import 'package:lifeos/features/focus/presentation/providers/focus_controller.dart';
 import 'package:lifeos/features/focus/presentation/providers/focus_dashboard_provider.dart';
 import 'package:lifeos/features/focus/presentation/widgets/focus_custom_duration_sheet.dart';
+import 'package:lifeos/features/focus/presentation/widgets/focus_dnd_toggle.dart';
 import 'package:lifeos/features/focus/presentation/widgets/focus_duration_wheel.dart';
 import 'package:lifeos/features/focus/presentation/widgets/focus_timer_display.dart';
 import 'package:lifeos/features/focus/presentation/widgets/focus_visual_stage_presenter.dart';
@@ -285,6 +286,8 @@ class _FocusOverview extends ConsumerWidget {
               label: 'Start Focus, ${selectedDuration.toShortLabel}',
               child: PrimaryButton(label: 'Start Focus', onPressed: onStart),
             ),
+            const SizedBox(height: AppSpacing.md),
+            const FocusDndToggle(),
             const SizedBox(height: AppSpacing.xl),
             dashboardAsync.when(
               loading: () => const SizedBox.shrink(),

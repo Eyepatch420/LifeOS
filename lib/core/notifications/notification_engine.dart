@@ -67,6 +67,9 @@ class NotificationEngine {
               title: intent.title,
               body: intent.body,
               countdownTo: intent.countdownTo,
+              showPauseAction: intent.showPauseAction,
+              showResumeAction: intent.showResumeAction,
+              showEndAction: intent.showEndAction,
             );
           case CancelOngoingNotification():
             await scheduler.cancelOngoing(intent.id);

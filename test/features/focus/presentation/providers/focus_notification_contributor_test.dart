@@ -22,6 +22,9 @@ void main() {
     expect(schedule.payload, 'focus:s1');
     expect(ongoing.id, 's1');
     expect(ongoing.countdownTo, endAt);
+    expect(ongoing.showPauseAction, isTrue);
+    expect(ongoing.showEndAction, isTrue);
+    expect(ongoing.showResumeAction, isFalse);
   });
 
   test('FocusSessionResumed reschedules the alarm and refreshes the '

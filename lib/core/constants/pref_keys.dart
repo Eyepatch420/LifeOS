@@ -7,4 +7,13 @@ abstract final class PrefKeys {
   static const String userAccentWorkspaceId = 'user_accent_workspace_id';
   static const String themeMode = 'theme_mode';
   static const String dailyReminderEnabled = 'daily_reminder_enabled';
+  static const String focusDndOptIn = 'focus_dnd_opt_in';
+  // Records the interruption filter to restore once Focus stops applying
+  // DND — set the instant DND is turned on, cleared the instant it's
+  // restored. Its mere presence at startup (see FocusDndCoordinator's
+  // reconciliation) means the last session ended (crash, force-quit, OS
+  // kill) without running that restore, so startup finishes the job DND
+  // itself can't: this key, not app lifecycle, is what "was DND left on by
+  // us" actually depends on.
+  static const String focusDndPriorFilter = 'focus_dnd_prior_filter';
 }
