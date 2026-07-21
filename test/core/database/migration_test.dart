@@ -307,4 +307,60 @@ void main() {
 
     await db.close();
   });
+
+  test(
+    'upgrading from a v6 database migrates the old one-row-per-day '
+    'MoodEntries shape into the new append-only shape without losing data, '
+    'and adds the Medications/MedicationOccurrences tables',
+    () async {
+      // Same rationale as the earlier migration tests: a real temp-file
+      // database proves the v6->v7 onUpgrade step actually runs the
+      // rename/copy/drop sequence against pre-existing data, not just a
+      // freshly-created v7 schema.
+      final tempDir = await Directory.systemTemp.createTemp(
+        'lifeos_migration_test_v6',
+      );
+      final dbFile = File(p.join(tempDir.path, 'v6.sqlite'));
+      addTearDown(() => tempDir.delete(recursive: true));
+
+      final seed = sqlite3.sqlite3.open(dbFile.path);
+      seed.execute('''
+        CREATE TABLE mood_entries (
+          id TEXT NOT NULL,
+          local_date TEXT NOT NULL,
+          score INTEGER NOT NULL,
+          note TEXT,
+          PRIMARY KEY (id)
+        );
+      ''');
+      seed.execute('''
+        INSERT INTO mood_entries (id, local_date, score, note)
+        VALUES ('m1', '2026-07-16', 4, 'Pre-migration entry');
+      ''');
+      seed.execute('PRAGMA user_version = 6');
+      seed.dispose();
+
+      final db = AppDatabase.forTesting(NativeDatabase(dbFile));
+
+      final moods = await db.moodEntriesDao.watchAll().first;
+      expect(moods, hasLength(1));
+      expect(moods.single.id, 'm1');
+      // score 4 buckets to 'good' — see the `from < 7` migration's CASE.
+      expect(moods.single.moodLevel, 'good');
+      expect(moods.single.note, 'Pre-migration entry');
+      // '2026-07-16' local-midnight survived the string->epoch conversion.
+      // Local (not UTC): Drift decodes epoch-seconds DateTime columns back
+      // into local time (see `SqlTypes._readDateTime`), matching every
+      // other DateTime in this codebase's convention.
+      expect(moods.single.recordedAt, DateTime(2026, 7, 16));
+      expect(moods.single.createdAt, DateTime(2026, 7, 16));
+
+      // Querying the two new tables proves onUpgrade's `from < 7` branch
+      // actually created them.
+      final medications = await db.medicationsDao.watchAll().first;
+      expect(medications, isEmpty);
+
+      await db.close();
+    },
+  );
 }

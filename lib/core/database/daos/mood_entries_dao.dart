@@ -12,32 +12,23 @@ class MoodEntriesDao extends DatabaseAccessor<AppDatabase>
   Stream<List<MoodEntry>> watchAll() {
     return (select(
       moodEntries,
-    )..orderBy([(t) => OrderingTerm.desc(t.localDate)])).watch();
+    )..orderBy([(t) => OrderingTerm.desc(t.recordedAt)])).watch();
   }
 
-  Future<MoodEntry?> getByDate(String localDate) {
+  Future<MoodEntry?> getById(String id) {
     return (select(
       moodEntries,
-    )..where((t) => t.localDate.equals(localDate))).getSingleOrNull();
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Upserts the entry for [localDate]: overwrites the existing row for
-  /// that day if present (only one mood entry per local day), inserts
-  /// otherwise.
-  Future<void> upsertForDate({
-    required String localDate,
-    required String Function() newId,
-    required int score,
-    String? note,
-  }) async {
-    final existing = await getByDate(localDate);
-    await into(moodEntries).insertOnConflictUpdate(
-      MoodEntriesCompanion.insert(
-        id: existing?.id ?? newId(),
-        localDate: localDate,
-        score: score,
-        note: Value(note),
-      ),
-    );
+  Future<void> insert(MoodEntriesCompanion entry) =>
+      into(moodEntries).insert(entry);
+
+  Future<void> updateFields(String id, MoodEntriesCompanion entry) {
+    return (update(moodEntries)..where((t) => t.id.equals(id))).write(entry);
+  }
+
+  Future<void> deleteById(String id) {
+    return (delete(moodEntries)..where((t) => t.id.equals(id))).go();
   }
 }

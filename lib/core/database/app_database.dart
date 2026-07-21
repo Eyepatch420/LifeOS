@@ -4,6 +4,7 @@ import 'package:lifeos/core/database/daos/expenses_dao.dart';
 import 'package:lifeos/core/database/daos/focus_sessions_dao.dart';
 import 'package:lifeos/core/database/daos/habits_dao.dart';
 import 'package:lifeos/core/database/daos/lists_dao.dart';
+import 'package:lifeos/core/database/daos/medications_dao.dart';
 import 'package:lifeos/core/database/daos/mood_entries_dao.dart';
 import 'package:lifeos/core/database/daos/notes_dao.dart';
 import 'package:lifeos/core/database/daos/notifications_dao.dart';
@@ -14,6 +15,8 @@ import 'package:lifeos/core/database/tables/expenses_table.dart';
 import 'package:lifeos/core/database/tables/focus_sessions_table.dart';
 import 'package:lifeos/core/database/tables/habits_table.dart';
 import 'package:lifeos/core/database/tables/lists_table.dart';
+import 'package:lifeos/core/database/tables/medication_occurrences_table.dart';
+import 'package:lifeos/core/database/tables/medications_table.dart';
 import 'package:lifeos/core/database/tables/mood_entries_table.dart';
 import 'package:lifeos/core/database/tables/notes_table.dart';
 import 'package:lifeos/core/database/tables/notifications_table.dart';
@@ -47,6 +50,8 @@ class AppMetadata extends Table {
     Notifications,
     FocusSessions,
     Events,
+    Medications,
+    MedicationOccurrences,
   ],
   daos: [
     NotesDao,
@@ -58,6 +63,7 @@ class AppMetadata extends Table {
     NotificationsDao,
     FocusSessionsDao,
     EventsDao,
+    MedicationsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -74,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,6 +127,77 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 6) {
           await m.addColumn(reminders, reminders.category);
+        }
+        if (from < 7) {
+          // `mood_entries` changes shape entirely — one-row-per-day
+          // (`local_date` TEXT + `score` INT) becomes append-only
+          // (`mood_level` TEXT + `recorded_at`/`created_at` DateTime), so
+          // this can't be an `addColumn` step. Rename the old table aside,
+          // create the new shape fresh, migrate each existing row across
+          // (mapping its 1-5 `score` into the new `moodLevel` bucket,
+          // `local_date` midnight into `recordedAt`/`createdAt`), then drop
+          // the renamed original — preserves every pre-existing entry
+          // rather than losing it to a destructive recreate.
+          // Guarded rather than unconditional: some of this test suite's
+          // synthetic pre-v7 fixtures only seed the tables relevant to what
+          // they're individually testing (not a full v2/v3/v4/v5 schema),
+          // so `mood_entries` may not exist yet on the connection this
+          // branch runs against. A genuine pre-v7 install always has it
+          // (created by the `from < 2` branch), so this is a no-op there.
+          final moodTableExists = await customSelect(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+            "AND name = 'mood_entries'",
+          ).getSingleOrNull();
+          if (moodTableExists != null) {
+            await customStatement(
+              'ALTER TABLE mood_entries RENAME TO mood_entries_v6',
+            );
+          }
+          await m.createTable(moodEntries);
+          if (moodTableExists != null) {
+            // Row-by-row in Dart rather than a single SQL INSERT SELECT:
+            // sqlite's `strftime('%s', local_date)` always treats the date
+            // as UTC, but Drift decodes epoch-seconds columns back into
+            // *local* DateTimes (`DateTime.fromMillisecondsSinceEpoch` with
+            // no `isUtc` flag — see `SqlTypes._readDateTime`). Computing the
+            // epoch via SQL would therefore round-trip to the wrong
+            // wall-clock time on any non-UTC device;
+            // `DateTime(y, m, d).millisecondsSinceEpoch` is local-aware and
+            // round-trips correctly instead.
+            final oldRows = await customSelect(
+              'SELECT id, local_date, score, note FROM mood_entries_v6',
+            ).get();
+            for (final row in oldRows) {
+              final id = row.read<String>('id');
+              final localDate = row.read<String>('local_date');
+              final score = row.read<int>('score');
+              final note = row.readNullable<String>('note');
+              final parts = localDate.split('-').map(int.parse).toList();
+              final recordedAt = DateTime(parts[0], parts[1], parts[2]);
+              final moodLevel = switch (score) {
+                <= 1 => 'veryBad',
+                2 => 'bad',
+                3 => 'neutral',
+                4 => 'good',
+                _ => 'great',
+              };
+              await customStatement(
+                'INSERT INTO mood_entries '
+                '(id, mood_level, note, recorded_at, created_at) '
+                'VALUES (?, ?, ?, ?, ?)',
+                [
+                  id,
+                  moodLevel,
+                  note,
+                  recordedAt.millisecondsSinceEpoch ~/ 1000,
+                  recordedAt.millisecondsSinceEpoch ~/ 1000,
+                ],
+              );
+            }
+            await customStatement('DROP TABLE mood_entries_v6');
+          }
+          await m.createTable(medications);
+          await m.createTable(medicationOccurrences);
         }
       }
     },

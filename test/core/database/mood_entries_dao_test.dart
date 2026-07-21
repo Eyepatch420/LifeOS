@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lifeos/core/database/app_database.dart';
@@ -11,53 +12,97 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('upsertForDate inserts a new entry for a fresh date', () async {
-    await db.moodEntriesDao.upsertForDate(
-      localDate: '2026-07-16',
-      newId: () => 'm1',
-      score: 4,
+  test('insert adds a new entry', () async {
+    final recordedAt = DateTime(2026, 7, 16, 9);
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm1',
+        moodLevel: 'good',
+        recordedAt: recordedAt,
+        createdAt: recordedAt,
+      ),
     );
 
-    final entry = await db.moodEntriesDao.getByDate('2026-07-16');
+    final entry = await db.moodEntriesDao.getById('m1');
     expect(entry, isNotNull);
-    expect(entry!.score, 4);
+    expect(entry!.moodLevel, 'good');
   });
 
-  test(
-    'upsertForDate overwrites rather than duplicates the same day',
-    () async {
-      await db.moodEntriesDao.upsertForDate(
-        localDate: '2026-07-16',
-        newId: () => 'm1',
-        score: 2,
-      );
-      await db.moodEntriesDao.upsertForDate(
-        localDate: '2026-07-16',
-        newId: () => 'm2',
-        score: 5,
-        note: 'Better now',
-      );
-
-      final all = await db.moodEntriesDao.watchAll().first;
-      expect(all, hasLength(1));
-      expect(all.single.score, 5);
-      expect(all.single.note, 'Better now');
-    },
-  );
-
-  test('watchAll orders by localDate descending', () async {
-    await db.moodEntriesDao.upsertForDate(
-      localDate: '2026-07-14',
-      newId: () => 'm1',
-      score: 3,
+  test('insert appends rather than overwriting a same-day entry', () async {
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm1',
+        moodLevel: 'bad',
+        recordedAt: DateTime(2026, 7, 16, 8),
+        createdAt: DateTime(2026, 7, 16, 8),
+      ),
     );
-    await db.moodEntriesDao.upsertForDate(
-      localDate: '2026-07-16',
-      newId: () => 'm2',
-      score: 3,
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm2',
+        moodLevel: 'great',
+        note: const Value('Better now'),
+        recordedAt: DateTime(2026, 7, 16, 18),
+        createdAt: DateTime(2026, 7, 16, 18),
+      ),
     );
 
     final all = await db.moodEntriesDao.watchAll().first;
-    expect(all.map((e) => e.localDate), ['2026-07-16', '2026-07-14']);
+    expect(all, hasLength(2));
+  });
+
+  test('watchAll orders by recordedAt descending', () async {
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm1',
+        moodLevel: 'neutral',
+        recordedAt: DateTime(2026, 7, 14),
+        createdAt: DateTime(2026, 7, 14),
+      ),
+    );
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm2',
+        moodLevel: 'neutral',
+        recordedAt: DateTime(2026, 7, 16),
+        createdAt: DateTime(2026, 7, 16),
+      ),
+    );
+
+    final all = await db.moodEntriesDao.watchAll().first;
+    expect(all.map((e) => e.id), ['m2', 'm1']);
+  });
+
+  test('deleteById removes the entry', () async {
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm1',
+        moodLevel: 'good',
+        recordedAt: DateTime(2026, 7, 16),
+        createdAt: DateTime(2026, 7, 16),
+      ),
+    );
+    await db.moodEntriesDao.deleteById('m1');
+
+    final all = await db.moodEntriesDao.watchAll().first;
+    expect(all, isEmpty);
+  });
+
+  test('updateFields overwrites the note', () async {
+    await db.moodEntriesDao.insert(
+      MoodEntriesCompanion.insert(
+        id: 'm1',
+        moodLevel: 'good',
+        recordedAt: DateTime(2026, 7, 16),
+        createdAt: DateTime(2026, 7, 16),
+      ),
+    );
+    await db.moodEntriesDao.updateFields(
+      'm1',
+      const MoodEntriesCompanion(note: Value('Edited note')),
+    );
+
+    final entry = await db.moodEntriesDao.getById('m1');
+    expect(entry!.note, 'Edited note');
   });
 }
