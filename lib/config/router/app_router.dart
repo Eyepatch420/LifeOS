@@ -6,6 +6,7 @@ import 'package:lifeos/core/animations/page_transitions.dart';
 import 'package:lifeos/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
 import 'package:lifeos/features/calendar/presentation/screens/event_detail_screen.dart';
 import 'package:lifeos/features/calendar/presentation/screens/new_event_screen.dart';
+import 'package:lifeos/features/activity/presentation/screens/activity_screen.dart';
 import 'package:lifeos/features/documents/presentation/screens/documents_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/finance_placeholder_screen.dart';
 import 'package:lifeos/features/finance/presentation/screens/new_expense_screen.dart';
@@ -16,8 +17,10 @@ import 'package:lifeos/features/habits/presentation/screens/habit_detail_screen.
 import 'package:lifeos/features/habits/presentation/screens/habits_dashboard_screen.dart';
 import 'package:lifeos/features/habits/presentation/screens/new_habit_screen.dart';
 import 'package:lifeos/features/health/presentation/providers/health_workspace_section_provider.dart';
+import 'package:lifeos/features/health/presentation/screens/health_overview_screen.dart';
 import 'package:lifeos/features/health/presentation/widgets/health_workspace_scaffold.dart';
 import 'package:lifeos/features/home/presentation/screens/home_screen.dart';
+import 'package:lifeos/features/hydration/presentation/screens/hydration_screen.dart';
 import 'package:lifeos/features/home/presentation/screens/timeline_detail_screen.dart';
 import 'package:lifeos/features/lists/presentation/screens/list_detail_screen.dart';
 import 'package:lifeos/features/lists/presentation/screens/lists_screen.dart';
@@ -40,10 +43,12 @@ import 'package:lifeos/features/reminders/presentation/screens/reminders_dashboa
 import 'package:lifeos/features/reminders/presentation/screens/reminders_list_screen.dart';
 import 'package:lifeos/features/reminders/presentation/widgets/planning_workspace_scaffold.dart';
 import 'package:lifeos/features/search/presentation/screens/search_screen.dart';
+import 'package:lifeos/features/sleep/presentation/screens/sleep_screen.dart';
 import 'package:lifeos/features/splash/presentation/screens/splash_screen.dart';
 import 'package:lifeos/features/user_setup/presentation/providers/user_profile_providers.dart';
 import 'package:lifeos/features/user_setup/presentation/screens/profile_placeholder_screen.dart';
 import 'package:lifeos/features/user_setup/presentation/screens/user_setup_screen.dart';
+import 'package:lifeos/features/weight/presentation/screens/weight_screen.dart';
 
 /// Root navigator, distinct from each `StatefulShellBranch`'s own nested
 /// navigator. Routes carrying `parentNavigatorKey: _rootNavigatorKey` push
@@ -419,6 +424,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: RoutePaths.health,
                 name: RouteNames.health,
                 builder: (context, state) => const HealthWorkspaceScaffold(
+                  overviewBody: HealthOverviewScreen(),
                   moodBody: MoodDashboardScreen(),
                   medicationsBody: MedicationsDashboardScreen(),
                 ),
@@ -485,6 +491,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       child: MedicationDetailScreen(
                         medicationId: state.pathParameters['medicationId']!,
                       ),
+                    ),
+                  ),
+                  // Hydration/Sleep/Weight/Activity — pushed screens reached
+                  // only from Health Overview's cards, not their own nav-bar
+                  // tab or redirect route (see `HealthWorkspaceSection`'s
+                  // doc comment on why the nav bar stops at three items).
+                  GoRoute(
+                    path: RoutePaths.hydration,
+                    name: RouteNames.hydration,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const HydrationScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.sleep,
+                    name: RouteNames.sleep,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const SleepScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.weight,
+                    name: RouteNames.weight,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const WeightScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: RoutePaths.activity,
+                    name: RouteNames.activity,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    pageBuilder: (context, state) => buildFadeThroughPage(
+                      key: state.pageKey,
+                      child: const ActivityScreen(),
                     ),
                   ),
                 ],

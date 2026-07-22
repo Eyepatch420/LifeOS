@@ -13,6 +13,10 @@ import 'package:lifeos/features/notes/presentation/providers/notes_search_contri
 import 'package:lifeos/features/reminders/presentation/providers/reminders_dashboard_provider.dart';
 import 'package:lifeos/features/reminders/presentation/providers/reminders_search_contributor.dart';
 import 'package:lifeos/features/search/domain/search_contributor.dart';
+import 'package:lifeos/features/sleep/presentation/providers/sleep_dashboard_provider.dart';
+import 'package:lifeos/features/sleep/presentation/providers/sleep_search_contributor.dart';
+import 'package:lifeos/features/weight/presentation/providers/weight_dashboard_provider.dart';
+import 'package:lifeos/features/weight/presentation/providers/weight_search_contributor.dart';
 
 /// The single composition-layer seam allowed to import every Type A
 /// feature's [SearchContributor] — `features/search` itself never does.
@@ -27,5 +31,7 @@ List<SearchContributor> searchContributors(Ref ref) {
     CalendarSearchContributor(ref.watch(eventsRepositoryProvider)),
     const FocusSearchContributor(),
     MedicationsSearchContributor(ref.watch(medicationsRepositoryProvider)),
+    WeightSearchContributor(ref.watch(weightRepositoryProvider)),
+    SleepSearchContributor(ref.watch(sleepRepositoryProvider)),
   ];
 }

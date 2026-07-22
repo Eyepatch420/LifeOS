@@ -29,8 +29,7 @@ class FocusCompletionScreen extends ConsumerStatefulWidget {
       _FocusCompletionScreenState();
 }
 
-class _FocusCompletionScreenState
-    extends ConsumerState<FocusCompletionScreen> {
+class _FocusCompletionScreenState extends ConsumerState<FocusCompletionScreen> {
   Timer? _autoContinueTimer;
   bool _navigated = false;
 

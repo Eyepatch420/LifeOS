@@ -8,17 +8,11 @@ void main() {
     });
 
     test('just below 33% is growing', () {
-      expect(
-        FocusVisualStage.forProgress(0.3299),
-        FocusVisualStage.growing,
-      );
+      expect(FocusVisualStage.forProgress(0.3299), FocusVisualStage.growing);
     });
 
     test('33% is ripening', () {
-      expect(
-        FocusVisualStage.forProgress(1 / 3),
-        FocusVisualStage.ripening,
-      );
+      expect(FocusVisualStage.forProgress(1 / 3), FocusVisualStage.ripening);
     });
 
     test('between 33% and 66% is ripening', () {
@@ -26,17 +20,11 @@ void main() {
     });
 
     test('just below 66% is ripening', () {
-      expect(
-        FocusVisualStage.forProgress(0.6599),
-        FocusVisualStage.ripening,
-      );
+      expect(FocusVisualStage.forProgress(0.6599), FocusVisualStage.ripening);
     });
 
     test('66% is settling', () {
-      expect(
-        FocusVisualStage.forProgress(2 / 3),
-        FocusVisualStage.settling,
-      );
+      expect(FocusVisualStage.forProgress(2 / 3), FocusVisualStage.settling);
     });
 
     test('100% is settling', () {

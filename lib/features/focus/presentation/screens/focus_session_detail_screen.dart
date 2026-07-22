@@ -107,9 +107,7 @@ class _SessionDetailView extends StatelessWidget {
                     ],
                   ),
                 ),
-                Expanded(
-                  child: _SessionDetailContent(session: session),
-                ),
+                Expanded(child: _SessionDetailContent(session: session)),
               ],
             ),
           ),
@@ -226,10 +224,7 @@ class _SessionDetailContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            _SessionSummaryCard(
-              session: session,
-              timeFormat: timeFormat,
-            ),
+            _SessionSummaryCard(session: session, timeFormat: timeFormat),
             const SizedBox(height: AppSpacing.lg),
             Text(
               dateFormat.format(session.startedAt),
@@ -290,10 +285,7 @@ class _SessionSummaryCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _DetailRow(
-            label: 'Planned',
-            value: '${session.plannedMinutes} min',
-          ),
+          _DetailRow(label: 'Planned', value: '${session.plannedMinutes} min'),
           _DetailRow(
             label: 'Started',
             value: timeFormat.format(session.startedAt),

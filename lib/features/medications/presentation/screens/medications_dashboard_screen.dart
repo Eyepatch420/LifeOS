@@ -277,7 +277,7 @@ class _StatusIcon extends StatelessWidget {
         color: context.colorScheme.onSurfaceVariant,
       ),
       MedicationOccurrenceStatus.missed => Icon(
-        Icons.error_outline,
+        Icons.notifications_off_outlined,
         color: context.colorScheme.error,
       ),
       MedicationOccurrenceStatus.scheduled => Icon(

@@ -16,4 +16,6 @@ abstract final class PrefKeys {
   // itself can't: this key, not app lifecycle, is what "was DND left on by
   // us" actually depends on.
   static const String focusDndPriorFilter = 'focus_dnd_prior_filter';
+  static const String hydrationDailyGoalMl = 'hydration_daily_goal_ml';
+  static const String activityDailyGoalSteps = 'activity_daily_goal_steps';
 }

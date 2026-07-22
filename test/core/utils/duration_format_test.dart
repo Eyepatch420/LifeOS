@@ -13,10 +13,7 @@ void main() {
     });
 
     test('hours and minutes combine', () {
-      expect(
-        const Duration(hours: 1, minutes: 30).toShortLabel,
-        '1 hr 30 min',
-      );
+      expect(const Duration(hours: 1, minutes: 30).toShortLabel, '1 hr 30 min');
     });
 
     test('90 minutes formats as 1 hr 30 min, not 90 min', () {
@@ -24,10 +21,7 @@ void main() {
     });
 
     test('1 hour 17 minutes custom duration', () {
-      expect(
-        const Duration(hours: 1, minutes: 17).toShortLabel,
-        '1 hr 17 min',
-      );
+      expect(const Duration(hours: 1, minutes: 17).toShortLabel, '1 hr 17 min');
     });
   });
 }

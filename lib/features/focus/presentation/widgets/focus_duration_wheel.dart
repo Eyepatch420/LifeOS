@@ -120,9 +120,7 @@ class _FocusDurationWheelState extends State<FocusDurationWheel> {
                 margin: const EdgeInsets.symmetric(horizontal: 32),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(
-                      color: context.colorScheme.outlineVariant,
-                    ),
+                    top: BorderSide(color: context.colorScheme.outlineVariant),
                     bottom: BorderSide(
                       color: context.colorScheme.outlineVariant,
                     ),

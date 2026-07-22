@@ -84,6 +84,15 @@ abstract final class RoutePaths {
   static const String medications = 'medications';
   static const String newMedication = 'medications/new';
   static const String medicationDetail = 'medications/:medicationId';
+
+  // Hydration/Sleep/Weight/Activity — each a single pushed screen (history
+  // + inline log/edit combined), reached only from Health Overview's cards,
+  // not their own nav-bar tabs. No `:id`-suffixed detail route: unlike
+  // Medication, these features have no per-entry drill-down screen.
+  static const String hydration = 'hydration';
+  static const String sleep = 'sleep';
+  static const String weight = 'weight';
+  static const String activity = 'activity';
 }
 
 abstract final class RouteNames {
@@ -127,4 +136,8 @@ abstract final class RouteNames {
   static const String medications = 'medications';
   static const String newMedication = 'newMedication';
   static const String medicationDetail = 'medicationDetail';
+  static const String hydration = 'hydration';
+  static const String sleep = 'sleep';
+  static const String weight = 'weight';
+  static const String activity = 'activity';
 }

@@ -1,19 +1,25 @@
 import 'package:drift/drift.dart';
+import 'package:lifeos/core/database/daos/daily_activity_dao.dart';
 import 'package:lifeos/core/database/daos/events_dao.dart';
 import 'package:lifeos/core/database/daos/expenses_dao.dart';
 import 'package:lifeos/core/database/daos/focus_sessions_dao.dart';
 import 'package:lifeos/core/database/daos/habits_dao.dart';
+import 'package:lifeos/core/database/daos/hydration_entries_dao.dart';
 import 'package:lifeos/core/database/daos/lists_dao.dart';
 import 'package:lifeos/core/database/daos/medications_dao.dart';
 import 'package:lifeos/core/database/daos/mood_entries_dao.dart';
 import 'package:lifeos/core/database/daos/notes_dao.dart';
 import 'package:lifeos/core/database/daos/notifications_dao.dart';
 import 'package:lifeos/core/database/daos/reminders_dao.dart';
+import 'package:lifeos/core/database/daos/sleep_entries_dao.dart';
+import 'package:lifeos/core/database/daos/weight_entries_dao.dart';
 import 'package:lifeos/core/database/database_connection.dart';
+import 'package:lifeos/core/database/tables/daily_activity_table.dart';
 import 'package:lifeos/core/database/tables/events_table.dart';
 import 'package:lifeos/core/database/tables/expenses_table.dart';
 import 'package:lifeos/core/database/tables/focus_sessions_table.dart';
 import 'package:lifeos/core/database/tables/habits_table.dart';
+import 'package:lifeos/core/database/tables/hydration_entries_table.dart';
 import 'package:lifeos/core/database/tables/lists_table.dart';
 import 'package:lifeos/core/database/tables/medication_occurrences_table.dart';
 import 'package:lifeos/core/database/tables/medications_table.dart';
@@ -21,6 +27,8 @@ import 'package:lifeos/core/database/tables/mood_entries_table.dart';
 import 'package:lifeos/core/database/tables/notes_table.dart';
 import 'package:lifeos/core/database/tables/notifications_table.dart';
 import 'package:lifeos/core/database/tables/reminders_table.dart';
+import 'package:lifeos/core/database/tables/sleep_entries_table.dart';
+import 'package:lifeos/core/database/tables/weight_entries_table.dart';
 
 part 'app_database.g.dart';
 
@@ -52,6 +60,10 @@ class AppMetadata extends Table {
     Events,
     Medications,
     MedicationOccurrences,
+    HydrationEntries,
+    SleepEntries,
+    WeightEntries,
+    DailyActivity,
   ],
   daos: [
     NotesDao,
@@ -64,6 +76,10 @@ class AppMetadata extends Table {
     FocusSessionsDao,
     EventsDao,
     MedicationsDao,
+    HydrationEntriesDao,
+    SleepEntriesDao,
+    WeightEntriesDao,
+    DailyActivityDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -80,7 +96,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -198,6 +214,16 @@ class AppDatabase extends _$AppDatabase {
           }
           await m.createTable(medications);
           await m.createTable(medicationOccurrences);
+        }
+        if (from < 8) {
+          // Four brand-new, independent tables (Hydration/Sleep/Weight/
+          // Activity) — no reshaping of any existing table, so a plain
+          // `createTable` per table is sufficient; nothing here can affect
+          // pre-existing Medication/Mood data.
+          await m.createTable(hydrationEntries);
+          await m.createTable(sleepEntries);
+          await m.createTable(weightEntries);
+          await m.createTable(dailyActivity);
         }
       }
     },

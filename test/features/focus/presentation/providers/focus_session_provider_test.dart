@@ -52,9 +52,7 @@ void main() {
     final sub = container.listen(focusSessionByIdProvider('f1'), (_, _) {});
     addTearDown(sub.close);
 
-    final session = await container.read(
-      focusSessionByIdProvider('f1').future,
-    );
+    final session = await container.read(focusSessionByIdProvider('f1').future);
     expect(session?.id, 'f1');
     expect(session?.status, FocusSessionStatus.running);
   });

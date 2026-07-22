@@ -34,8 +34,7 @@ class _FocusCustomDurationSheet extends StatefulWidget {
       _FocusCustomDurationSheetState();
 }
 
-class _FocusCustomDurationSheetState
-    extends State<_FocusCustomDurationSheet> {
+class _FocusCustomDurationSheetState extends State<_FocusCustomDurationSheet> {
   late int _hours;
   late int _minutes;
   late final FixedExtentScrollController _hoursController;

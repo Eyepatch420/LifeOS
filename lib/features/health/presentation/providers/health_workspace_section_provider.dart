@@ -9,7 +9,7 @@ import 'package:lifeos/features/health/presentation/widgets/health_workspace_sca
 /// user back to the Mood tab.
 class HealthWorkspaceSectionNotifier extends Notifier<HealthWorkspaceSection> {
   @override
-  HealthWorkspaceSection build() => HealthWorkspaceSection.mood;
+  HealthWorkspaceSection build() => HealthWorkspaceSection.overview;
 
   void select(HealthWorkspaceSection section) => state = section;
 }

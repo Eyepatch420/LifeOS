@@ -16,23 +16,31 @@ import 'package:lifeos/theme/theme_providers.dart';
 
 /// Which workspace-nav item is currently active — drives both the pill
 /// highlight in [RemindersWorkspaceNav] (reused as-is; it's feature-agnostic
-/// despite the name) and which of the two workspace bodies
-/// [HealthWorkspaceScaffold] shows.
-enum HealthWorkspaceSection { mood, medications }
+/// despite the name) and which of the three workspace bodies
+/// [HealthWorkspaceScaffold] shows. [overview] is the default landing
+/// section — Hydration/Sleep/Weight/Activity are deliberately NOT separate
+/// nav-bar tabs (would grow this bar unboundedly as Health gains more
+/// domains); they're reached only via cards on the Overview tab, pushed as
+/// their own screens.
+enum HealthWorkspaceSection { overview, mood, medications }
 
-/// Shared shell AND sole owner of the two tabs that belong to the green
-/// Health workspace (Mood, Medications) — mirrors
+/// Shared shell AND sole owner of the three tabs that belong to the green
+/// Health workspace (Overview, Mood, Medications) — mirrors
 /// `PlanningWorkspaceScaffold` exactly (same hero/scaffold composition, same
-/// kept-alive tab-switching mechanism), scoped down to two tabs instead of
+/// kept-alive tab-switching mechanism), scoped down to three tabs instead of
 /// four. See that class's doc comment for the full rationale behind the
 /// `_WorkspaceBodySwitcher`/`_KeepAlive` mechanics duplicated below (private
 /// to that file, so not directly reusable from here).
 class HealthWorkspaceScaffold extends ConsumerWidget {
   const HealthWorkspaceScaffold({
+    required this.overviewBody,
     required this.moodBody,
     required this.medicationsBody,
     super.key,
   });
+
+  /// `HealthOverviewScreen()`, supplied by the router.
+  final Widget overviewBody;
 
   /// `MoodDashboardScreen()`, supplied by the router.
   final Widget moodBody;
@@ -50,6 +58,13 @@ class HealthWorkspaceScaffold extends ConsumerWidget {
 
     final navItems = [
       RemindersWorkspaceNavItem(
+        label: 'Overview',
+        icon: Icons.dashboard_outlined,
+        onSelected: section == HealthWorkspaceSection.overview
+            ? null
+            : () => sectionNotifier.select(HealthWorkspaceSection.overview),
+      ),
+      RemindersWorkspaceNavItem(
         label: 'Mood',
         icon: Icons.mood_rounded,
         onSelected: section == HealthWorkspaceSection.mood
@@ -65,8 +80,9 @@ class HealthWorkspaceScaffold extends ConsumerWidget {
       ),
     ];
     final selectedIndex = switch (section) {
-      HealthWorkspaceSection.mood => 0,
-      HealthWorkspaceSection.medications => 1,
+      HealthWorkspaceSection.overview => 0,
+      HealthWorkspaceSection.mood => 1,
+      HealthWorkspaceSection.medications => 2,
     };
 
     return FloatingPageLayout(
@@ -93,6 +109,7 @@ class HealthWorkspaceScaffold extends ConsumerWidget {
           child: _WorkspaceBodySwitcher(
             selectedIndex: selectedIndex,
             children: [
+              _KeepAlive(child: overviewBody),
               _KeepAlive(child: moodBody),
               _KeepAlive(child: medicationsBody),
             ],

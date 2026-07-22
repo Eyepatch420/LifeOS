@@ -90,12 +90,18 @@ void main() {
       final s = session(startedAt: DateTime(2026, 1, 1, 9), plannedMinutes: 90);
       final now = DateTime(2026, 1, 1, 9);
 
-      expect(s.progressAt(now.add(const Duration(minutes: 29))), lessThan(1 / 3));
+      expect(
+        s.progressAt(now.add(const Duration(minutes: 29))),
+        lessThan(1 / 3),
+      );
       expect(
         s.progressAt(now.add(const Duration(minutes: 31))),
         allOf(greaterThan(1 / 3), lessThan(2 / 3)),
       );
-      expect(s.progressAt(now.add(const Duration(minutes: 61))), greaterThan(2 / 3));
+      expect(
+        s.progressAt(now.add(const Duration(minutes: 61))),
+        greaterThan(2 / 3),
+      );
     });
   });
 }

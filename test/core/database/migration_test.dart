@@ -360,4 +360,85 @@ void main() {
 
     await db.close();
   });
+
+  test(
+    'upgrading from a v7 database adds the Hydration/Sleep/Weight/'
+    'Activity tables without losing existing Medication or Mood data',
+    () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'lifeos_migration_test_v7',
+      );
+      final dbFile = File(p.join(tempDir.path, 'v7.sqlite'));
+      addTearDown(() => tempDir.delete(recursive: true));
+
+      final seed = sqlite3.sqlite3.open(dbFile.path);
+      seed.execute('''
+        CREATE TABLE mood_entries (
+          id TEXT NOT NULL,
+          mood_level TEXT NOT NULL,
+          note TEXT,
+          recorded_at INTEGER NOT NULL,
+          created_at INTEGER NOT NULL,
+          PRIMARY KEY (id)
+        );
+      ''');
+      seed.execute('''
+        INSERT INTO mood_entries (id, mood_level, note, recorded_at, created_at)
+        VALUES ('m1', 'good', 'Pre-v8 mood', 1784246400, 1784246400);
+      ''');
+      seed.execute('''
+        CREATE TABLE medications (
+          id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          dosage_text TEXT,
+          instructions TEXT,
+          schedule_times TEXT NOT NULL,
+          schedule_days TEXT,
+          created_at INTEGER NOT NULL,
+          archived_at INTEGER,
+          PRIMARY KEY (id)
+        );
+      ''');
+      seed.execute('''
+        INSERT INTO medications
+          (id, name, schedule_times, created_at)
+        VALUES ('med1', 'Paracetamol', '09:00', 1784246400);
+      ''');
+      seed.execute('''
+        CREATE TABLE medication_occurrences (
+          id TEXT NOT NULL,
+          medication_id TEXT NOT NULL,
+          scheduled_for INTEGER NOT NULL,
+          status TEXT NOT NULL,
+          taken_at INTEGER,
+          PRIMARY KEY (id)
+        );
+      ''');
+      seed.execute('PRAGMA user_version = 7');
+      seed.dispose();
+
+      final db = AppDatabase.forTesting(NativeDatabase(dbFile));
+
+      // Pre-existing Mood/Medication data survives the purely-additive v8
+      // migration untouched.
+      final moods = await db.moodEntriesDao.watchAll().first;
+      expect(moods, hasLength(1));
+      expect(moods.single.id, 'm1');
+      expect(moods.single.note, 'Pre-v8 mood');
+
+      final medications = await db.medicationsDao.watchAll().first;
+      expect(medications, hasLength(1));
+      expect(medications.single.id, 'med1');
+      expect(medications.single.name, 'Paracetamol');
+
+      // Querying the four new tables proves onUpgrade's `from < 8` branch
+      // actually created them.
+      expect(await db.hydrationEntriesDao.watchAll().first, isEmpty);
+      expect(await db.sleepEntriesDao.watchAll().first, isEmpty);
+      expect(await db.weightEntriesDao.watchAll().first, isEmpty);
+      expect(await db.dailyActivityDao.watchAll().first, isEmpty);
+
+      await db.close();
+    },
+  );
 }
